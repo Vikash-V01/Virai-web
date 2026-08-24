@@ -41,7 +41,7 @@
 
     var typeOpts = ['<option value="">All Formats</option>'];
     ["Candle","Travel Candle","Set"].forEach(function(t){
-      typeOpts.push('<option value="'+t+'">'+t+(t==="Set"?"es":"s")+"</option>");
+      typeOpts.push('<option value="'+t+'">'+t+"s</option>");
     });
     typeSel.innerHTML = typeOpts.join("");
 
@@ -80,6 +80,8 @@
     });
     famSel.value = state.family;
     typeSel.value = state.type;
+    famSel.dispatchEvent(new CustomEvent("vr-sync"));
+    typeSel.dispatchEvent(new CustomEvent("vr-sync"));
 
     var active = !!(state.collection || state.family || state.type);
     clearBtn.hidden = !active;

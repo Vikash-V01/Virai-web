@@ -2,6 +2,10 @@
   "use strict";
   window.dataLayer = window.dataLayer || [];
   window.VIRAI_CTX = {};
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var MOTION = !REDUCED;
+  if(MOTION){ document.documentElement.classList.add("vr-motion"); }
   window.IMG_ERR = "if(!this.dataset.f){this.dataset.f=1;var m=this.getAttribute('data-master');if(m){this.srcset='';this.src=m;}else{this.style.opacity=0;}console.error('IMAGE LOAD FAILED: '+(m||this.getAttribute('src')))}else{this.style.opacity=0;console.error('IMAGE LOAD FAILED: '+(this.currentSrc||this.src))}";
 
   function $(s,c){ return (c||document).querySelector(s); }
@@ -250,6 +254,56 @@
   function closeDrawer(){ if(!drawer) return; overlay.classList.remove("open"); drawer.classList.remove("open"); document.body.style.overflow = ""; }
   window.viraiOpenBag = openDrawer;
 
+  // --- Tactile Add-to-Bag: a fragment of the object travels to the bag ---
+  function bagTarget(){
+    var bags = $all(".m-bag, .icon-btn[data-open-bag]").filter(function(b){
+      return b.offsetParent !== null;
+    });
+    var el = bags[bags.length - 1] || $(".bag-count");
+    return el || null;
+  }
+  function pulseBag(){
+    $all(".bag-count").forEach(function(b){
+      if(b.offsetParent === null) return;
+      b.classList.remove("vr-pulse");
+      void b.offsetWidth;
+      b.classList.add("vr-pulse");
+      setTimeout(function(){ b.classList.remove("vr-pulse"); }, 600);
+    });
+  }
+  function flyToBag(srcImg){
+    if(!MOTION || !srcImg || typeof srcImg.getBoundingClientRect !== "function") return;
+    var dest = bagTarget();
+    if(!dest) return;
+    var s = srcImg.getBoundingClientRect();
+    var d = dest.getBoundingClientRect();
+    if(!s.width || !s.height) return;
+    var fly = document.createElement("div");
+    fly.className = "vr-fly";
+    var size = Math.min(120, Math.max(64, s.width * 0.5));
+    fly.style.width = size + "px";
+    fly.style.height = size * 1.2 + "px";
+    fly.style.left = (s.left + s.width / 2 - size / 2) + "px";
+    fly.style.top = (s.top + s.height / 2 - size * 0.6) + "px";
+    var img = document.createElement("img");
+    img.src = srcImg.currentSrc || srcImg.src;
+    img.alt = "";
+    fly.appendChild(img);
+    document.body.appendChild(fly);
+    var dx = (d.left + d.width / 2) - (s.left + s.width / 2);
+    var dy = (d.top + d.height / 2) - (s.top + s.height / 2);
+    var anim = fly.animate([
+      { transform: "translate(0,0) scale(1)", opacity: 1 },
+      { transform: "translate(" + (dx * 0.5) + "px," + (dy * 0.5 - 40) + "px) scale(.7)", opacity: 1, offset: 0.6 },
+      { transform: "translate(" + dx + "px," + dy + "px) scale(.14)", opacity: 0 }
+    ], { duration: 900, easing: "cubic-bezier(.22,.61,.21,1)", fill: "forwards" });
+    var done = function(){ if(fly.parentNode) fly.parentNode.removeChild(fly); pulseBag(); };
+    if(anim && anim.finished && anim.finished.then){ anim.finished.then(done).catch(done); }
+    else{ setTimeout(done, 950); }
+  }
+  window.viraiFlyToBag = flyToBag;
+  window.viraiPulseBag = pulseBag;
+
   var toastTimer = null;
   function toast(msg){
     var el = $(".toast");
@@ -265,10 +319,79 @@
     toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2600);
   }
 
-  function initReveals(){
-    $all(".reveal:not(.in),.note-row:not(.in)").forEach(function(el){ el.classList.add("in"); });
+  // --- Coherent scroll-reveal engine ------------------------------------
+  // Existing markup already carries .reveal / .reveal-d1..3 hooks. We also
+  // auto-tag key editorial blocks so every page reads as one continuous
+  // Virai story rather than sections that individually animate. Falls back
+  // to instant visibility when motion is off or IntersectionObserver is
+  // unavailable, and a safety pass reveals anything left hidden.
+  var revealIO = null;
+
+  function autoTag(){
+    if(!MOTION) return;
+    var main = $("#main") || document.body;
+
+    // Stagger children of common group containers.
+    var groups = $all(
+      ".product-grid,.craft-grid,.gift-tiles,.fam-row,.landscape-strip,.value-grid," +
+      ".confirm-next,.detail-grid,.steps,.notes,.pdp-thumbs", main
+    );
+    groups.forEach(function(g){
+      Array.prototype.slice.call(g.children).forEach(function(child, i){
+        if(child.classList.contains("reveal")) return;
+        child.classList.add("reveal", "vr-soft", "vr-s" + Math.min(6, i + 1));
+      });
+    });
+
+    // Standalone editorial blocks that lack an explicit reveal hook.
+    var solo = $all(
+      "section > .wrap > h2, .editorial > p, .pullquote, .editorial-fig," +
+      " .gift-banner, .split > *, .contact-info .block, .step", main
+    );
+    solo.forEach(function(el){
+      if(!el.classList.contains("reveal") && !el.closest(".hero")) el.classList.add("reveal", "vr-soft");
+    });
+
+    // Large media settles from a gentle over-scale.
+    $all(".art, .intro-fig .art, .craft-item .art, .gift-banner .art, .world-banner picture", main)
+      .forEach(function(el){ el.classList.add("vr-media-in"); });
   }
-  window.viraiReveal = initReveals;
+
+  function revealNow(el){ el.classList.add("in"); }
+
+  function initReveals(){
+    var targets = $all(".reveal:not(.in),.note-row:not(.in),.vr-media-in:not(.in),.pcard:not(.in)");
+    if(!MOTION || typeof IntersectionObserver === "undefined"){
+      targets.forEach(revealNow);
+      return;
+    }
+    if(!revealIO){
+      revealIO = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(e.isIntersecting){ revealNow(e.target); revealIO.unobserve(e.target); }
+        });
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    }
+    var vh = window.innerHeight || 800;
+    targets.forEach(function(el){
+      var r = el.getBoundingClientRect();
+      // Anything already on-screen at load reveals immediately (with its
+      // CSS delay providing the stagger) so nothing pops in late.
+      if(r.top < vh * 0.92 && r.bottom > 0){ revealNow(el); }
+      else{ revealIO.observe(el); }
+    });
+  }
+
+  // Safety net: never leave content stuck hidden if the observer misfires.
+  function revealSafety(){
+    $all(".reveal:not(.in),.vr-media-in:not(.in),.pcard:not(.in)").forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if(r.top < (window.innerHeight || 800) * 1.1) revealNow(el);
+    });
+  }
+  window.addEventListener("load", function(){ setTimeout(revealSafety, 400); });
+
+  window.viraiReveal = function(){ autoTag(); initReveals(); };
 
   function initChrome(){
     var proto = $("#proto");
@@ -315,7 +438,17 @@
 
     document.addEventListener("click", function(e){
       var add = e.target.closest("[data-add]");
-      if(add){ e.preventDefault(); addToBag(add.dataset.add, {}); return; }
+      if(add){
+        e.preventDefault();
+        if(MOTION){
+          add.classList.remove("vr-press"); void add.offsetWidth; add.classList.add("vr-press");
+          var card = add.closest(".pcard");
+          var srcImg = card ? $(".pcard-media img", card) : null;
+          if(srcImg) flyToBag(srcImg);
+        }
+        addToBag(add.dataset.add, {});
+        return;
+      }
       var bagBtn = e.target.closest("[data-open-bag]");
       if(bagBtn){ e.preventDefault(); openDrawer(); }
     });
@@ -351,24 +484,73 @@
   function initHeroMotion(){
     var media = $(".hero-media img");
     var head = $(".site-head");
-    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if(!media && !head) return;
+    // Large landscape imagery on inner pages drifts gently as you scroll.
+    var parallax = MOTION ? $all(".ph-media img, .land-hero-media img, .gift-banner .art img") : [];
+    if(!media && !head && !parallax.length) return;
     var ticking = false;
+    function frame(){
+      var y = window.scrollY;
+      if(head){
+        if(y > 28) head.classList.add("scrolled");
+        else if(y < 10) head.classList.remove("scrolled");
+      }
+      if(media && MOTION && y < window.innerHeight * 1.2){
+        media.style.transform = "translateY(" + (y * 0.12).toFixed(1) + "px) scale(1.08)";
+      }
+      parallax.forEach(function(img){
+        var host = img.closest(".ph-media, .land-hero-media, .art");
+        if(!host) return;
+        var r = host.getBoundingClientRect();
+        if(r.bottom < -100 || r.top > (window.innerHeight || 800) + 100) return;
+        var offset = (r.top / (window.innerHeight || 800)) * -26;
+        img.style.transform = "translateY(" + offset.toFixed(1) + "px) scale(1.08)";
+      });
+      ticking = false;
+    }
     window.addEventListener("scroll", function(){
       if(ticking) return;
       ticking = true;
-      requestAnimationFrame(function(){
-        var y = window.scrollY;
-        if(head){
-          if(y > 28) head.classList.add("scrolled");
-          else if(y < 10) head.classList.remove("scrolled");
-        }
-        if(media && !reduced && y < window.innerHeight * 1.2){
-          media.style.transform = "translateY(" + (y * 0.12).toFixed(1) + "px) scale(1.08)";
-        }
-        ticking = false;
-      });
+      requestAnimationFrame(frame);
     }, { passive:true });
+    frame();
+  }
+
+  // --- Page transitions: leave through a soft veil, arrive the same way ---
+  function initPageTransitions(){
+    var veil = document.createElement("div");
+    veil.className = "vr-veil";
+    document.body.appendChild(veil);
+    if(MOTION){
+      // Entrance fade (CSS-driven, self-completing).
+      requestAnimationFrame(function(){ veil.classList.add("vr-veil-enter"); });
+    }
+    // Reset on back/forward restore so a cached page isn't left veiled.
+    window.addEventListener("pageshow", function(ev){
+      document.documentElement.classList.remove("vr-leaving");
+      if(ev.persisted){
+        veil.classList.remove("vr-veil-enter");
+        if(MOTION) requestAnimationFrame(function(){ veil.classList.add("vr-veil-enter"); });
+      }
+    });
+    if(!MOTION) return;
+
+    document.addEventListener("click", function(e){
+      if(e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest("a");
+      if(!a) return;
+      var href = a.getAttribute("href");
+      if(!href || a.target === "_blank" || a.hasAttribute("download")) return;
+      if(href.charAt(0) === "#" || href.indexOf("mailto:") === 0 || href.indexOf("tel:") === 0) return;
+      if(a.dataset.openBag !== undefined) return;
+      var url;
+      try{ url = new URL(a.href, location.href); }catch(err){ return; }
+      if(url.origin !== location.origin) return;
+      // Same page (only hash/query change) — let the browser handle it.
+      if(url.pathname === location.pathname && url.hash) return;
+      e.preventDefault();
+      document.documentElement.classList.add("vr-leaving");
+      setTimeout(function(){ window.location.href = a.href; }, 460);
+    });
   }
 
   function initLandSwitcher(){
@@ -443,8 +625,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", function(){
+    try{ initPageTransitions(); }catch(e){ console.error("[virai] initPageTransitions failed:", e); }
     try{ initChrome(); }catch(e){ console.error("[virai] initChrome failed:", e); }
     try{ initDataRenders(); }catch(e){ console.error("[virai] initDataRenders failed:", e); }
+    try{ autoTag(); }catch(e){ console.error("[virai] autoTag failed:", e); }
     try{ initReveals(); }catch(e){ console.error("[virai] initReveals failed:", e); }
     try{ initHeroMotion(); }catch(e){ console.error("[virai] initHeroMotion failed:", e); }
     try{ initLandSwitcher(); }catch(e){ console.error("[virai] initLandSwitcher failed:", e); }

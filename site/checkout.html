@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checkout | VIRAI</title>
+<meta name="description" content="Secure checkout — Virai fragrance-led gifts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+</head>
+<body data-page="checkout">
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head">
+  <div class="wrap head-main" style="height:64px;border-bottom:none">
+    <a class="link-u" href="shop.html" style="border-bottom:none">&larr; Continue shopping</a>
+    <a class="brand-mark" href="index.html" aria-label="Virai - home"><img class="logo-img" src="img/virai-logo.webp" alt="Virai"></a>
+    <span></span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <section class="checkout">
+      <form id="coForm" novalidate>
+        <p class="kicker">Guest checkout — no account needed</p>
+        <h1 style="font-size:clamp(1.8rem,3.4vw,2.6rem);margin-bottom:2rem">Where shall it linger?</h1>
+
+        <div class="form-grid">
+          <div><label class="f-label" for="f-name">Full name *</label><input type="text" id="f-name" required autocomplete="name"></div>
+          <div><label class="f-label" for="f-email">Email *</label><input type="email" id="f-email" required autocomplete="email"></div>
+          <div><label class="f-label" for="f-phone">Phone *</label><input type="tel" id="f-phone" required autocomplete="tel"></div>
+          <div><label class="f-label" for="f-pin">PIN code *</label><input type="text" id="f-pin" required inputmode="numeric" pattern="[0-9]{6}" autocomplete="postal-code"></div>
+          <div class="full"><label class="f-label" for="f-address">Address *</label><textarea id="f-address" rows="2" required autocomplete="street-address"></textarea></div>
+          <div><label class="f-label" for="f-city">City *</label><input type="text" id="f-city" required autocomplete="address-level2"></div>
+          <div><label class="f-label" for="f-state">State *</label><input type="text" id="f-state" required autocomplete="address-level1"></div>
+        </div>
+
+        <h2 style="font-size:1.2rem;margin:2.4rem 0 1rem">Delivery</h2>
+        <label class="ship-opt"><input type="radio" name="ship" value="standard" checked>
+          <span style="flex:1">Standard delivery<small class="small" style="display:block">3–7 business days · dispatched in 1–2 days</small></span>
+          <strong id="stdPrice">₹99</strong></label>
+        <label class="ship-opt"><input type="radio" name="ship" value="express">
+          <span style="flex:1">Express delivery<small class="small" style="display:block">1–2 business days · metros first</small></span>
+          <strong>₹350</strong></label>
+        <p class="small" style="margin:.4rem 0 0">Shipping bands are placeholders pending Finance sign-off.</p>
+
+        <h2 style="font-size:1.2rem;margin:2.4rem 0 1rem">Payment</h2>
+        <div class="pay-note" id="payNote"></div>
+
+        <p style="margin-top:2rem"><button class="btn btn-solid" type="submit" style="width:100%;padding:1.15rem">Place Order</button></p>
+        <p class="small center" style="margin-top:.8rem">By ordering you accept our terms and return policy.</p>
+      </form>
+
+      <aside class="summary" aria-label="Order summary">
+        <h2 style="font-size:1.15rem;margin-bottom:.4rem">Your order</h2>
+        <div id="sumLines"></div>
+        <div class="sum-totals">
+          <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span id="tSub"></span></div>
+          <div style="display:flex;justify-content:space-between"><span id="tShipLabel">Standard delivery</span><span id="tShip"></span></div>
+          <div class="grand"><span>Total</span><span id="tGrand"></span></div>
+          <p class="small muted" style="margin-top:.4rem">GST included · Gift wrap charges (₹150 per object) included above</p>
+        </div>
+      </aside>
+    </section>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/checkout.js"></script>
+</body>
+</html>

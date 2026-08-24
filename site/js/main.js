@@ -624,10 +624,93 @@
     });
   }
 
+  // Progressive-enhancement dropdown: replaces native <select.filter-select>
+  // UI with a VIRAI-styled panel while keeping the <select> as source of truth.
+  function initFilterSelects(){
+    $all("select.filter-select").forEach(function(sel){
+      if(sel.dataset.vrEnhanced) return;
+      sel.dataset.vrEnhanced = "1";
+
+      var wrap = document.createElement("div");
+      wrap.className = "vr-sel";
+      sel.parentNode.insertBefore(wrap, sel);
+      wrap.appendChild(sel);
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "vr-sel-btn";
+      btn.setAttribute("aria-haspopup", "listbox");
+      btn.setAttribute("aria-expanded", "false");
+      if(sel.getAttribute("aria-label")) btn.setAttribute("aria-label", sel.getAttribute("aria-label"));
+      var label = document.createElement("span");
+      label.className = "vr-sel-label";
+      btn.appendChild(label);
+      btn.insertAdjacentHTML("beforeend",
+        '<svg class="vr-sel-caret" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" fill="none"/></svg>');
+      wrap.appendChild(btn);
+
+      var panel = document.createElement("div");
+      panel.className = "vr-sel-panel";
+      panel.setAttribute("role", "listbox");
+      wrap.appendChild(panel);
+
+      function syncLabel(){
+        var opt = sel.options[sel.selectedIndex];
+        label.textContent = opt ? opt.text : "";
+      }
+
+      function buildOptions(){
+        panel.innerHTML = "";
+        $all("option", sel).forEach(function(o){
+          var item = document.createElement("button");
+          item.type = "button";
+          item.className = "vr-sel-opt";
+          item.setAttribute("role", "option");
+          item.textContent = o.text;
+          item.setAttribute("aria-selected", o.value === sel.value ? "true" : "false");
+          item.addEventListener("click", function(){
+            sel.value = o.value;
+            sel.dispatchEvent(new Event("change", { bubbles:true }));
+            syncLabel();
+            markSelected();
+            close();
+          });
+          panel.appendChild(item);
+        });
+      }
+
+      function markSelected(){
+        $all(".vr-sel-opt", panel).forEach(function(item, i){
+          item.setAttribute("aria-selected", sel.options[i] && sel.options[i].value === sel.value ? "true" : "false");
+        });
+      }
+
+      function open(){
+        wrap.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      }
+      function close(){
+        wrap.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      }
+      function toggle(){ wrap.classList.contains("open") ? close() : open(); }
+
+      btn.addEventListener("click", function(e){ e.stopPropagation(); toggle(); });
+      document.addEventListener("click", function(e){ if(!wrap.contains(e.target)) close(); });
+      document.addEventListener("keydown", function(e){ if(e.key === "Escape") close(); });
+      // Keep in sync when shop.js mutates the select programmatically.
+      sel.addEventListener("vr-sync", function(){ syncLabel(); markSelected(); });
+
+      buildOptions();
+      syncLabel();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function(){
     try{ initPageTransitions(); }catch(e){ console.error("[virai] initPageTransitions failed:", e); }
     try{ initChrome(); }catch(e){ console.error("[virai] initChrome failed:", e); }
     try{ initDataRenders(); }catch(e){ console.error("[virai] initDataRenders failed:", e); }
+    try{ initFilterSelects(); }catch(e){ console.error("[virai] initFilterSelects failed:", e); }
     try{ autoTag(); }catch(e){ console.error("[virai] autoTag failed:", e); }
     try{ initReveals(); }catch(e){ console.error("[virai] initReveals failed:", e); }
     try{ initHeroMotion(); }catch(e){ console.error("[virai] initHeroMotion failed:", e); }

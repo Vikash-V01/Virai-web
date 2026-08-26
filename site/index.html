@@ -142,13 +142,18 @@
     </div>
   </section>
 
-  <section class="world-banner" aria-label="The Virai world">
-    <a class="wb-link" href="ainthinai.html" aria-label="Discover Virai — explore the Ainthinai collection">
-      <picture>
-        <source media="(max-width:880px)" srcset="img/17.webp" width="852" height="1846">
-        <img src="img/16.webp" alt="Scents that hold stories — a lit Virai Ainthinai candle and gift box on stone, misted Tamil mountains behind" width="1672" height="941" loading="lazy" decoding="async" onerror="if(!this.dataset.f){this.dataset.f=1;var m=this.getAttribute('data-master');if(m){this.srcset='';this.src=m;}else{this.style.opacity=0;}console.error('IMAGE LOAD FAILED: '+(m||this.getAttribute('src')))}else{this.style.opacity=0;console.error('IMAGE LOAD FAILED: '+(this.currentSrc||this.src))}">
-      </picture>
-    </a>
+  <section class="world-banner virai-candle-scene" aria-labelledby="scene-h">
+    <div class="scene-media">
+      <img class="scene-state scene-unlit" src="img/virai-kurinji-unlit.webp" alt="Virai Ainthinai Kurinji candle and gift box against misted mountains, candle unlit" width="1672" height="941" loading="lazy" decoding="async">
+      <img class="scene-state scene-lit" src="img/virai-kurinji-lit.webp" alt="Virai Ainthinai Kurinji candle and gift box against misted mountains, candle lit" width="1672" height="941" loading="lazy" decoding="async">
+      <div class="scene-candle-glow" aria-hidden="true"></div>
+      <div class="scene-copy wrap">
+        <p class="kicker">A fragrance that lingers</p>
+        <h2 id="scene-h">Scents that hold stories.</h2>
+        <p>Rooted in Tamil land. Crafted with care. Made to be remembered.</p>
+        <a class="link-u" href="ainthinai.html">Discover Virai</a>
+      </div>
+    </div>
   </section>
 
   <section class="section craft-band" aria-labelledby="craft-h">
@@ -178,79 +183,33 @@
 
   <section class="section-tight" aria-labelledby="gift-h">
     <div class="wrap">
-      <div style="margin-bottom:3rem">
-        <p class="kicker reveal">Gifting</p>
-        <h2 id="gift-h" class="reveal reveal-d1">Made to be given.</h2>
-      </div>
-      <div class="gift-tiles">
-        <a class="gift-tile reveal" href="gift.html#personal">
-          <span class="kicker" style="margin-bottom:.6rem">Personal</span>
-          <h3>Say it precisely</h3>
-          <p>A gift matched to a feeling — union, waiting, longing — wrapped and messaged by hand.</p>
-          <span class="link-u">Find a Gift</span>
-        </a>
-        <a class="gift-tile reveal reveal-d1" href="weddings.html">
-          <span class="kicker" style="margin-bottom:.6rem">Weddings &amp; Events</span>
-          <h3>Favours worth keeping</h3>
-          <p>Fragrance favours for weddings and celebrations — considered at any scale.</p>
-          <span class="link-u">Request a Quote</span>
-        </a>
-        <a class="gift-tile reveal reveal-d2" href="corporate.html">
-          <span class="kicker" style="margin-bottom:.6rem">Corporate</span>
-          <h3>Regard, at scale</h3>
-          <p>Festive and client gifting with quiet distinction, invoiced and delivered on time.</p>
-          <span class="link-u">Request a Quote</span>
-        </a>
+      <div class="center"><p class="kicker reveal">Gifting</p><h2 id="gift-h" class="reveal reveal-d1">Give a feeling, not a thing.</h2><p class="lede reveal reveal-d2" style="margin-top:1rem">For a person, a room, a gathering — find the Virai that fits the moment.</p></div>
+      <div class="gift-grid" style="margin-top:3rem">
+        <a class="gift-card reveal" href="gift.html#personal"><span class="gc-k">01</span><h3>Personal gifting</h3><p>Find something that feels like them.</p><span class="link-u">Explore</span></a>
+        <a class="gift-card reveal reveal-d1" href="weddings.html"><span class="gc-k">02</span><h3>Weddings &amp; events</h3><p>Thoughtful favours, designed to linger.</p><span class="link-u">Explore</span></a>
+        <a class="gift-card reveal reveal-d2" href="corporate.html"><span class="gc-k">03</span><h3>Corporate gifting</h3><p>Recognition gifts that feel considered.</p><span class="link-u">Explore</span></a>
       </div>
     </div>
   </section>
 
-  <section class="section-tight" aria-labelledby="fam-h">
-    <div class="wrap">
-      <div class="center" style="margin-bottom:3rem">
-        <p class="kicker reveal">Fragrance Discovery</p>
-        <h2 id="fam-h" class="reveal reveal-d1">Begin with a feeling, or begin with a scent.</h2>
-      </div>
-      <div class="fam-row reveal reveal-d2">
-        <a class="fam-cell" href="shop.html?family=floral"><span class="fam-name">Floral</span><p class="fam-desc">Jasmine, blue florals, soft petals — love in bloom.</p></a>
-        <a class="fam-cell" href="shop.html?family=woody"><span class="fam-name">Woody</span><p class="fam-desc">Smoked woods, amber, vetiver — depth and staying.</p></a>
-        <a class="fam-cell" href="shop.html?family=earthy"><span class="fam-name">Earthy</span><p class="fam-desc">Wet earth, rain, paddy fields — grounded and warm.</p></a>
-        <a class="fam-cell" href="shop.html?family=fresh"><span class="fam-name">Fresh</span><p class="fam-desc">Salt air, mist, mountain wind — clear and open.</p></a>
-      </div>
-    </div>
-  </section>
-
-  <section class="final-cta" aria-labelledby="end-h">
-    <div class="wrap">
-      <p class="kicker reveal">Virai — விரை</p>
-      <h2 id="end-h" class="reveal reveal-d1">Leave something that lingers.</h2>
-      <div class="hero-cta reveal reveal-d2">
-        <a class="btn btn-solid" href="ainthinai.html">Explore Ainthinai</a>
-        <a class="btn btn-ghost" href="find-your-virai.html">Find a Gift</a>
-      </div>
+  <section class="section" aria-labelledby="last-h">
+    <div class="wrap center">
+      <p class="kicker reveal">Virai</p>
+      <h2 id="last-h" class="reveal reveal-d1">Fragrance for the moments<br>we keep.</h2>
+      <p class="lede reveal reveal-d2" style="margin:1.2rem auto 0">Tamil-rooted. Sensory. Timeless.</p>
+      <div style="margin-top:2rem"><a class="btn btn-solid reveal reveal-d3" href="shop.html">Shop Fragrance</a></div>
     </div>
   </section>
 </main>
 
 <footer class="site-foot">
   <div class="wrap foot-grid">
-    <div class="foot-news">
-      <h3>Letters that linger</h3>
-      <p>Occasional notes on fragrance, craft and the five landscapes. No noise.</p>
-      <form data-form="newsletter" novalidate>
-        <input type="email" required placeholder="Email address" aria-label="Email address">
-        <button class="btn btn-line" type="submit" style="border-color:#57503F;color:var(--smoke)">Subscribe</button>
-      </form>
-    </div>
-    <div class="foot-col"><h4>Shop</h4><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Sets</a><a href="product.html?id=discovery-set">Discovery Set</a></div>
-    <div class="foot-col"><h4>Ainthinai</h4><a href="ainthinai.html">Collection 01</a><a href="landscape.html?id=kurinji">Kurinji</a><a href="landscape.html?id=mullai">Mullai</a><a href="landscape.html?id=marutham">Marutham</a><a href="landscape.html?id=neithal">Neithal</a><a href="landscape.html?id=palai">Palai</a></div>
-    <div class="foot-col"><h4>Gift</h4><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
-    <div class="foot-col"><h4>Care</h4><a href="contact.html">Contact</a><a href="faq.html">FAQs</a><a href="shipping.html">Shipping</a><a href="returns.html">Returns</a><a href="care.html">Product Care</a></div>
+    <div><div class="foot-brand">VIRAI</div><p>Luxury Gifting, Rooted in Fragrance.</p></div>
+    <div><h5>Explore</h5><a href="shop.html">Shop</a><a href="ainthinai.html">Ainthinai</a><a href="gift.html">Gift</a><a href="story.html">Discover</a></div>
+    <div><h5>Help</h5><a href="contact.html">Contact</a><a href="faq.html">FAQs</a><a href="shipping.html">Shipping &amp; Returns</a><a href="product-care.html">Product Care</a></div>
+    <div><h5>Follow</h5><a href="#">Instagram</a><a href="#">Pinterest</a></div>
   </div>
-  <div class="wrap foot-base">
-    <span>&copy; <span id="yr"></span> Virai — Luxury Gifting, Rooted in Fragrance</span>
-    <span class="foot-brand tamil">விரை — Lingering Impressions</span>
-  </div>
+  <div class="wrap foot-base"><span>&copy; <span id="yr"></span> Virai — Luxury Gifting, Rooted in Fragrance</span><span class="foot-brand tamil">விரை — Lingering Impressions</span></div>
 </footer>
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>

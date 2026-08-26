@@ -2,50 +2,132 @@
 
 /* ============================================================
    VIRAI — HOME WORLD-BANNER / CRAFT TRANSITION
-   The next section must begin directly after the cinematic image.
+   The next section begins directly after the cinematic image.
    ============================================================ */
 .world-banner{
   position:relative;
+  display:block;
+  width:100%;
   margin:0;
   padding:0;
   line-height:0;
 }
 
+.world-banner .wb-link,
+.world-banner picture,
+.world-banner img{
+  display:block;
+  width:100%;
+}
+
+.world-banner img{
+  height:auto;
+}
+
 .world-banner + .craft-band{
-  margin-top:0;
+  margin-top:0 !important;
   padding-top:0 !important;
+  border-top:0;
 }
 
 .world-banner + .craft-band .wrap{
-  padding-top:0;
+  padding-top:0 !important;
+}
+
+.world-banner + .craft-band .center{
+  margin-top:0 !important;
+  padding-top:0 !important;
+}
+
+.world-banner + .craft-band .center > :first-child{
+  margin-top:0 !important;
 }
 
 /* ============================================================
    VIRAI — HOME HERO ATMOSPHERIC PARALLAX
-   The JS creates .vr-home-clouds from the existing Kurinji image.
-   Keep the duplicate visually confined to sky/cloud/mist.
+   Scroll-driven sky/cloud depth. The effect is intentionally
+   subtle in idle state and becomes visible only through scroll.
    ============================================================ */
 .hero-media{
   isolation:isolate;
+  overflow:hidden;
 }
 
-.vr-home-clouds{
+/* CSS scroll-driven fallback layer.
+   This makes the parallax visible even if JS motion is delayed. */
+.hero-media::before{
+  content:"";
+  position:absolute;
+  inset:-12%;
+  z-index:1;
+  pointer-events:none;
+  background-image:var(--vr-hero-image, url("../img/11.webp"));
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  opacity:.42;
+  mix-blend-mode:screen;
+  clip-path:inset(0 0 54% 0);
+  -webkit-clip-path:inset(0 0 54% 0);
+  transform:translate3d(0,0,0) scale(1.06);
   transform-origin:center center;
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
-  clip-path:inset(0 0 38% 0);
-  -webkit-clip-path:inset(0 0 38% 0);
+  will-change:transform;
+}
+
+/* Keep the JS-generated duplicate from stacking on top of the
+   CSS layer. The CSS layer is the reliable scroll-driven layer. */
+.vr-home-clouds{
+  display:none !important;
+}
+
+@supports (animation-timeline: view()){
+  .hero{
+    view-timeline-name:--virai-hero;
+    view-timeline-axis:block;
+  }
+
+  .hero-media::before{
+    animation:viraiHeroCloudParallax 1ms linear both;
+    animation-timeline:--virai-hero;
+    animation-range:entry 0% exit 100%;
+  }
+}
+
+@keyframes viraiHeroCloudParallax{
+  from{
+    transform:translate3d(-1.5vw,1.5vh,0) scale(1.06);
+  }
+  to{
+    transform:translate3d(7vw,-7vh,0) scale(1.12);
+  }
 }
 
 @media (max-width:880px){
-  .vr-home-clouds{
-    clip-path:inset(0 0 42% 0);
-    -webkit-clip-path:inset(0 0 42% 0);
+  .hero-media::before{
+    opacity:.34;
+    clip-path:inset(0 0 58% 0);
+    -webkit-clip-path:inset(0 0 58% 0);
+  }
+
+  @supports (animation-timeline:view()){
+    .hero-media::before{
+      animation-range:entry 0% exit 100%;
+    }
+  }
+
+  @keyframes viraiHeroCloudParallax{
+    from{
+      transform:translate3d(-.5vw,1vh,0) scale(1.06);
+    }
+    to{
+      transform:translate3d(3vw,-3.5vh,0) scale(1.09);
+    }
   }
 }
 
 @media (prefers-reduced-motion:reduce){
-  .vr-home-clouds{
+  .hero-media::before{
+    animation:none !important;
     transform:none !important;
   }
 }

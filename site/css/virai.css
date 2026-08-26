@@ -2,7 +2,7 @@
 
 /* ============================================================
    VIRAI — HOME WORLD-BANNER / CRAFT TRANSITION
-   Keep the cinematic image flush with the next section.
+   The next section must begin directly after the cinematic image.
    ============================================================ */
 .world-banner{
   position:relative;
@@ -17,13 +17,13 @@
 }
 
 .world-banner + .craft-band .wrap{
-  padding-top:clamp(2.5rem,5vw,4.5rem);
+  padding-top:0;
 }
 
 /* ============================================================
    VIRAI — HOME HERO ATMOSPHERIC PARALLAX
    The JS creates .vr-home-clouds from the existing Kurinji image.
-   Keep the atmospheric duplicate visually confined to sky/mist.
+   Keep the duplicate visually confined to sky/cloud/mist.
    ============================================================ */
 .hero-media{
   isolation:isolate;
@@ -38,10 +38,6 @@
 }
 
 @media (max-width:880px){
-  .world-banner + .craft-band .wrap{
-    padding-top:2.25rem;
-  }
-
   .vr-home-clouds{
     clip-path:inset(0 0 42% 0);
     -webkit-clip-path:inset(0 0 42% 0);

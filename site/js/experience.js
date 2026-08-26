@@ -117,7 +117,7 @@
       var kind = sec.dataset.land || "kurinji", bg = $(".panel-bg", sec);
       if(bg){ drift($("picture", bg), { dur:54 + i*6, dx:(i%2 ? -1.2 : 1.3), dy:-0.6, from:"1.03" }); atmo(bg, kind); }
     });
-    var aintLede = $(".ainth-intro .lede"); if(aintLede) unfoldLines(ainthLede);
+    var aintLede = $(".ainth-intro .lede"); if(aintLede) unfoldLines(aintLede);
   }
   if(page === "landscape"){
     var params = new URLSearchParams(location.search), kind = params.get("id");
@@ -136,88 +136,91 @@
 
   /* ============================================================
      HOME HERO — TRUE CLOUD PARALLAX
-
-     The photograph stays grounded. A dedicated transparent cloud
-     asset floats above it. Only this layer is transformed from
-     scroll position. Hero copy is deliberately untouched.
      ============================================================ */
   if(page === "home"){
     var hero = $(".hero");
     var heroImg = $("#heroImg");
     var heroMediaNode = $(".hero-media", hero);
     var heroAtmo = $(".hero-media .vr-atmo", hero);
-
     if(hero && heroImg && heroMediaNode){
       hero.classList.add("vr-home-parallax");
-
       var cloudLayer = $(".vr-home-clouds", heroMediaNode);
       if(!cloudLayer){
         cloudLayer = el("div","vr-home-clouds");
         cloudLayer.setAttribute("aria-hidden","true");
         heroMediaNode.appendChild(cloudLayer);
       }
-
-      /* Do not move the photograph, content or scrim on scroll. */
       heroImg.style.willChange = "auto";
       if(heroAtmo) heroAtmo.style.willChange = "transform";
-
-      var ticking = false;
-      var raf = 0;
-
+      var ticking = false, raf = 0;
       function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
-
       function renderCloudParallax(){
         ticking = false;
-
         var rect = hero.getBoundingClientRect();
-        var h = Math.max(hero.offsetHeight || window.innerHeight, 1);
+        var h = Math.max(hero.offsetHeight || window.innerHeight,1);
         var mobile = window.innerWidth < 881;
-
-        /* 0 at hero entry; 1 when the hero has completely crossed. */
-        var p = clamp(-rect.top / h, 0, 1);
-
-        /*
-          The cloud movement is intentionally much slower than the page:
-          desktop: 0 → +8vw and 0 → -3.2vh
-          mobile:  0 → +4vw and 0 → -1.8vh
-
-          Scale prevents transparent edges from ever becoming visible.
-        */
+        var p = clamp(-rect.top / h,0,1);
         var cloudX = p * (mobile ? 4.0 : 8.0);
         var cloudY = p * (mobile ? -1.8 : -3.2);
         var cloudScale = 1.04 + p * (mobile ? 0.025 : 0.045);
-
-        cloudLayer.style.transform =
-          "translate3d(" + cloudX.toFixed(3) + "vw," +
-          cloudY.toFixed(3) + "vh,0) scale(" + cloudScale.toFixed(4) + ")";
-
-        /* A tiny independent mist drift adds depth without moving the image. */
+        cloudLayer.style.transform = "translate3d(" + cloudX.toFixed(3) + "vw," + cloudY.toFixed(3) + "vh,0) scale(" + cloudScale.toFixed(4) + ")";
         if(heroAtmo){
           var mistY = p * (mobile ? -0.6 : -1.0);
           heroAtmo.style.transform = "translate3d(0," + mistY.toFixed(3) + "vh,0)";
         }
       }
+      function requestCloudRender(){ if(ticking) return; ticking = true; raf = window.requestAnimationFrame(renderCloudParallax); }
+      window.addEventListener("scroll",requestCloudRender,{passive:true});
+      window.addEventListener("resize",requestCloudRender,{passive:true});
+      window.addEventListener("orientationchange",requestCloudRender,{passive:true});
+      window.addEventListener("load",requestCloudRender,{once:true});
+      requestCloudRender();
+      document.addEventListener("visibilitychange",function(){
+        if(document.hidden && raf){ window.cancelAnimationFrame(raf); raf=0; ticking=false; }
+        else if(!document.hidden) requestCloudRender();
+      });
+    }
 
-      function requestCloudRender(){
-        if(ticking) return;
-        ticking = true;
-        raf = window.requestAnimationFrame(renderCloudParallax);
+    /* ============================================================
+       SCROLL-LIT KURINJI SCENE
+       Two matched visual states crossfade as the scene moves through
+       the viewport. The candle starts unlit and becomes fully lit.
+       ============================================================ */
+    var candleScene = $(".virai-candle-scene");
+    if(candleScene){
+      var unlit = $(".scene-unlit",candleScene);
+      var lit = $(".scene-lit",candleScene);
+      var glow = $(".scene-candle-glow",candleScene);
+      var candleTicking = false;
+      var candleRaf = 0;
+
+      function sceneProgress(){
+        var rect = candleScene.getBoundingClientRect();
+        var viewH = Math.max(window.innerHeight || doc.documentElement.clientHeight,1);
+        var sceneH = Math.max(candleScene.offsetHeight || viewH,1);
+        var start = viewH * 0.80;
+        var end = -sceneH * 0.20;
+        return clamp((start - rect.top) / Math.max(start - end,1),0,1);
       }
 
-      window.addEventListener("scroll", requestCloudRender, { passive:true });
-      window.addEventListener("resize", requestCloudRender, { passive:true });
-      window.addEventListener("orientationchange", requestCloudRender, { passive:true });
-      window.addEventListener("load", requestCloudRender, { once:true });
-      requestCloudRender();
+      function renderCandle(){
+        candleTicking = false;
+        var p = sceneProgress();
+        var litProgress = clamp((p - 0.18) / 0.52,0,1);
+        if(unlit) unlit.style.opacity = (1-litProgress).toFixed(3);
+        if(lit) lit.style.opacity = litProgress.toFixed(3);
+        if(glow) glow.style.opacity = (litProgress * 0.95).toFixed(3);
+      }
 
-      document.addEventListener("visibilitychange", function(){
-        if(document.hidden && raf){
-          window.cancelAnimationFrame(raf);
-          raf = 0;
-          ticking = false;
-        }else if(!document.hidden){
-          requestCloudRender();
-        }
+      function requestCandleRender(){ if(candleTicking) return; candleTicking = true; candleRaf = window.requestAnimationFrame(renderCandle); }
+      window.addEventListener("scroll",requestCandleRender,{passive:true});
+      window.addEventListener("resize",requestCandleRender,{passive:true});
+      window.addEventListener("orientationchange",requestCandleRender,{passive:true});
+      window.addEventListener("load",requestCandleRender,{once:true});
+      requestCandleRender();
+      document.addEventListener("visibilitychange",function(){
+        if(document.hidden && candleRaf){ window.cancelAnimationFrame(candleRaf); candleRaf=0; candleTicking=false; }
+        else if(!document.hidden) requestCandleRender();
       });
     }
   }

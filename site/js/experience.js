@@ -117,7 +117,7 @@
       var kind = sec.dataset.land || "kurinji", bg = $(".panel-bg", sec);
       if(bg){ drift($("picture", bg), { dur:54 + i*6, dx:(i%2 ? -1.2 : 1.3), dy:-0.6, from:"1.03" }); atmo(bg, kind); }
     });
-    var aintLede = $(".ainth-intro .lede"); if(aintLede) unfoldLines(aintLede);
+    var aintLede = $(".ainth-intro .lede"); if(aintLede) unfoldLines(ainthLede);
   }
   if(page === "landscape"){
     var params = new URLSearchParams(location.search), kind = params.get("id");
@@ -134,55 +134,91 @@
     else window.viraiVeilTone("");
   }, true);
 
-  /* --- HOME HERO SCROLL PARALLAX ---------------------------------- */
+  /* ============================================================
+     HOME HERO — TRUE CLOUD PARALLAX
+
+     The photograph stays grounded. A dedicated transparent cloud
+     asset floats above it. Only this layer is transformed from
+     scroll position. Hero copy is deliberately untouched.
+     ============================================================ */
   if(page === "home"){
-    var hero = $(".hero"), heroImg = $("#heroImg"), heroContent = $(".hero-content"), heroAtmo = $(".hero-media .vr-atmo");
-    if(hero && heroImg && heroContent){
-      hero.classList.add("vr-home-parallax"); heroImg.style.willChange = "transform"; heroContent.style.willChange = "transform,opacity";
+    var hero = $(".hero");
+    var heroImg = $("#heroImg");
+    var heroMediaNode = $(".hero-media", hero);
+    var heroAtmo = $(".hero-media .vr-atmo", hero);
+
+    if(hero && heroImg && heroMediaNode){
+      hero.classList.add("vr-home-parallax");
+
+      var cloudLayer = $(".vr-home-clouds", heroMediaNode);
+      if(!cloudLayer){
+        cloudLayer = el("div","vr-home-clouds");
+        cloudLayer.setAttribute("aria-hidden","true");
+        heroMediaNode.appendChild(cloudLayer);
+      }
+
+      /* Do not move the photograph, content or scrim on scroll. */
+      heroImg.style.willChange = "auto";
       if(heroAtmo) heroAtmo.style.willChange = "transform";
 
-      /* A masked duplicate of the existing Kurinji photograph creates a
-         dedicated sky/cloud layer. No second image asset is downloaded. */
-      var cloudLayer = $(".vr-home-clouds", hero);
-      if(!cloudLayer){
-        cloudLayer = el("div","vr-home-clouds"); cloudLayer.setAttribute("aria-hidden","true");
-        var cloudSrc = heroImg.currentSrc || heroImg.getAttribute("src") || "img/11.webp";
-        cloudLayer.style.position = "absolute"; cloudLayer.style.inset = "-10%"; cloudLayer.style.zIndex = "1"; cloudLayer.style.pointerEvents = "none";
-        cloudLayer.style.backgroundImage = "url(\"" + cloudSrc.replace(/\"/g,"%22") + "\")";
-        cloudLayer.style.backgroundRepeat = "no-repeat"; cloudLayer.style.backgroundPosition = "center center"; cloudLayer.style.backgroundSize = "cover";
-        cloudLayer.style.opacity = "0.32"; cloudLayer.style.mixBlendMode = "screen";
-        cloudLayer.style.webkitMaskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 44%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0) 72%)";
-        cloudLayer.style.maskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 44%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0) 72%)";
-        cloudLayer.style.willChange = "transform"; heroMedia.appendChild(cloudLayer);
-      }
+      var ticking = false;
+      var raf = 0;
 
-      if(heroAtmo){ $all("i", heroAtmo).forEach(function(n){ n.style.animation = "none"; }); heroAtmo.style.opacity = "0.30"; heroAtmo.style.willChange = "transform"; }
-
-      var ticking = false, raf = 0;
       function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
-      function render(){
+
+      function renderCloudParallax(){
         ticking = false;
-        var rect = hero.getBoundingClientRect(), h = Math.max(hero.offsetHeight || window.innerHeight,1), p = clamp(-rect.top / h,0,1), mobile = window.innerWidth < 881;
-        var imageY = p * (mobile ? 3.8 : 6.0);
-        var scale = 1.08 + p * (mobile ? 0.014 : 0.020);
-        var copyY = p * (mobile ? -0.7 : -1.3);
-        var opacity = 1 - Math.max(0,p - 0.5) * 1.35;
 
-        /* Clouds deliberately travel farther than the grounded mountain. */
-        var cloudX = p * (mobile ? 3.0 : 7.0);
-        var cloudY = p * (mobile ? -3.6 : -7.0);
-        var cloudScale = 1.06 + p * (mobile ? 0.016 : 0.028);
-        var atmoY = p * (mobile ? 3.5 : 5.5);
+        var rect = hero.getBoundingClientRect();
+        var h = Math.max(hero.offsetHeight || window.innerHeight, 1);
+        var mobile = window.innerWidth < 881;
 
-        heroImg.style.transform = "translate3d(0,"+imageY.toFixed(3)+"vh,0) scale("+scale.toFixed(4)+")";
-        heroContent.style.transform = "translate3d(0,"+copyY.toFixed(3)+"vh,0)";
-        heroContent.style.opacity = clamp(opacity,0,1).toFixed(3);
-        cloudLayer.style.transform = "translate3d("+cloudX.toFixed(3)+"vw,"+cloudY.toFixed(3)+"vh,0) scale("+cloudScale.toFixed(4)+")";
-        if(heroAtmo) heroAtmo.style.transform = "translate3d(0,"+atmoY.toFixed(3)+"vh,0)";
+        /* 0 at hero entry; 1 when the hero has completely crossed. */
+        var p = clamp(-rect.top / h, 0, 1);
+
+        /*
+          The cloud movement is intentionally much slower than the page:
+          desktop: 0 → +8vw and 0 → -3.2vh
+          mobile:  0 → +4vw and 0 → -1.8vh
+
+          Scale prevents transparent edges from ever becoming visible.
+        */
+        var cloudX = p * (mobile ? 4.0 : 8.0);
+        var cloudY = p * (mobile ? -1.8 : -3.2);
+        var cloudScale = 1.04 + p * (mobile ? 0.025 : 0.045);
+
+        cloudLayer.style.transform =
+          "translate3d(" + cloudX.toFixed(3) + "vw," +
+          cloudY.toFixed(3) + "vh,0) scale(" + cloudScale.toFixed(4) + ")";
+
+        /* A tiny independent mist drift adds depth without moving the image. */
+        if(heroAtmo){
+          var mistY = p * (mobile ? -0.6 : -1.0);
+          heroAtmo.style.transform = "translate3d(0," + mistY.toFixed(3) + "vh,0)";
+        }
       }
-      function request(){ if(ticking) return; ticking = true; raf = window.requestAnimationFrame(render); }
-      window.addEventListener("scroll",request,{passive:true}); window.addEventListener("resize",request,{passive:true}); window.addEventListener("orientationchange",request,{passive:true}); window.addEventListener("load",request,{once:true}); request();
-      document.addEventListener("visibilitychange",function(){ if(document.hidden && raf){ window.cancelAnimationFrame(raf); raf=0; ticking=false; } else if(!document.hidden) request(); });
+
+      function requestCloudRender(){
+        if(ticking) return;
+        ticking = true;
+        raf = window.requestAnimationFrame(renderCloudParallax);
+      }
+
+      window.addEventListener("scroll", requestCloudRender, { passive:true });
+      window.addEventListener("resize", requestCloudRender, { passive:true });
+      window.addEventListener("orientationchange", requestCloudRender, { passive:true });
+      window.addEventListener("load", requestCloudRender, { once:true });
+      requestCloudRender();
+
+      document.addEventListener("visibilitychange", function(){
+        if(document.hidden && raf){
+          window.cancelAnimationFrame(raf);
+          raf = 0;
+          ticking = false;
+        }else if(!document.hidden){
+          requestCloudRender();
+        }
+      });
     }
   }
 })();

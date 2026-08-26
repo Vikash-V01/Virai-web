@@ -2,7 +2,6 @@
 
 /* ============================================================
    VIRAI — HOME WORLD-BANNER / CRAFT TRANSITION
-   The next section begins directly after the cinematic image.
    ============================================================ */
 .world-banner{
   position:relative;
@@ -20,114 +19,68 @@
   width:100%;
 }
 
-.world-banner img{
-  height:auto;
-}
+.world-banner img{height:auto}
 
 .world-banner + .craft-band{
   margin-top:0 !important;
   padding-top:0 !important;
   border-top:0;
 }
-
-.world-banner + .craft-band .wrap{
-  padding-top:0 !important;
-}
-
-.world-banner + .craft-band .center{
-  margin-top:0 !important;
-  padding-top:0 !important;
-}
-
-.world-banner + .craft-band .center > :first-child{
-  margin-top:0 !important;
-}
+.world-banner + .craft-band .wrap{padding-top:0 !important}
+.world-banner + .craft-band .center{margin-top:0 !important;padding-top:0 !important}
+.world-banner + .craft-band .center > :first-child{margin-top:0 !important}
 
 /* ============================================================
-   VIRAI — HOME HERO ATMOSPHERIC PARALLAX
-   Scroll-driven sky/cloud depth. The effect is intentionally
-   subtle in idle state and becomes visible only through scroll.
+   VIRAI — HOME HERO CLOUD PARALLAX
+
+   The landscape photograph is the grounded layer. Clouds are a
+   separate transparent SVG layer and are the ONLY hero visual
+   layer moved by scroll. Text/content never participates in the
+   parallax calculation.
    ============================================================ */
 .hero-media{
   isolation:isolate;
   overflow:hidden;
 }
 
-/* CSS scroll-driven fallback layer.
-   This makes the parallax visible even if JS motion is delayed. */
-.hero-media::before{
-  content:"";
+.hero-media .hero-scrim{
+  z-index:3;
+}
+
+/* Injected by experience.js. Kept as a real layer rather than a
+   pseudo-element so its transform is independent of the photo. */
+.hero-media .vr-home-clouds{
   position:absolute;
-  inset:-12%;
-  z-index:1;
+  inset:-8% -14%;
+  z-index:2;
+  display:block !important;
   pointer-events:none;
-  background-image:var(--vr-hero-image, url("../img/11.webp"));
+  background-image:url("../img/hero-clouds.svg");
   background-repeat:no-repeat;
-  background-position:center center;
+  background-position:center top;
   background-size:cover;
-  opacity:.42;
-  mix-blend-mode:screen;
-  clip-path:inset(0 0 54% 0);
-  -webkit-clip-path:inset(0 0 54% 0);
-  transform:translate3d(0,0,0) scale(1.06);
+  opacity:.62;
+  transform:translate3d(0,0,0) scale(1.04);
   transform-origin:center center;
   will-change:transform;
+  contain:paint;
 }
 
-/* Keep the JS-generated duplicate from stacking on top of the
-   CSS layer. The CSS layer is the reliable scroll-driven layer. */
-.vr-home-clouds{
-  display:none !important;
-}
+/* The cloud asset is atmospheric, so keep it below the text and
+   above the landscape. */
+.hero-media .vr-atmo{z-index:2}
+.hero-media .hero-img{position:relative;z-index:0}
 
-@supports (animation-timeline: view()){
-  .hero{
-    view-timeline-name:--virai-hero;
-    view-timeline-axis:block;
-  }
-
-  .hero-media::before{
-    animation:viraiHeroCloudParallax 1ms linear both;
-    animation-timeline:--virai-hero;
-    animation-range:entry 0% exit 100%;
-  }
-}
-
-@keyframes viraiHeroCloudParallax{
-  from{
-    transform:translate3d(-1.5vw,1.5vh,0) scale(1.06);
-  }
-  to{
-    transform:translate3d(7vw,-7vh,0) scale(1.12);
-  }
-}
-
+/* Mobile uses less lateral travel to avoid a visible edge. */
 @media (max-width:880px){
-  .hero-media::before{
-    opacity:.34;
-    clip-path:inset(0 0 58% 0);
-    -webkit-clip-path:inset(0 0 58% 0);
-  }
-
-  @supports (animation-timeline:view()){
-    .hero-media::before{
-      animation-range:entry 0% exit 100%;
-    }
-  }
-
-  @keyframes viraiHeroCloudParallax{
-    from{
-      transform:translate3d(-.5vw,1vh,0) scale(1.06);
-    }
-    to{
-      transform:translate3d(3vw,-3.5vh,0) scale(1.09);
-    }
+  .hero-media .vr-home-clouds{
+    inset:-7% -10%;
+    opacity:.52;
+    background-position:center top;
+    transform:translate3d(0,0,0) scale(1.035);
   }
 }
 
 @media (prefers-reduced-motion:reduce){
-  .hero-media::before{
-    animation:none !important;
-    transform:none !important;
-  }
+  .hero-media .vr-home-clouds{transform:none !important}
 }

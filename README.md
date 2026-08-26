@@ -78,6 +78,20 @@ Everything below is invented for the prototype and must be replaced with functio
 | Brand narrative (story.html), founding details | Deliberately claim-free draft | Brand Studio |
 | Forms/cart/checkout | Local-only; connect CRM, ESP, payment gateway, order system | Tech |
 
+## Experience layer — sensory motion (`js/experience.js`)
+
+Progressive enhancement loaded by `main.js` only when `prefers-reduced-motion` is not set. Zero new dependencies; compositor-only (transform/opacity), no blur filters, no video.
+
+- **Opening sequence** (home): atmosphere first, headline gathers with a tracking/blur settle, then sub + CTAs
+- **Ambient drift**: hero, Ainthinai panels, landscape heroes, world banner hold a 46–66s breath via wrappers (`vr-drift-host`) so scrims/parallax keep working
+- **Per-landscape air** (`vr-atmo--*`): Kurinji cloud-shadow, Mullai dappled foliage light, Marutham warm breeze, Neithal slow sea-sheen, Palai heat-haze — gradient masses on long loops
+- **Candle lighting ritual** (`vr-lit`): cards/PDP/quiz results rest slightly dimmed, then warm, flicker, pool light and raise two faint fragrance-wisps as they enter view; multiple candles light in scroll-tied sequence (~0.8s apart)
+- **Typography**: major h1/h2 reveals settle from slight tracking; the House + Ainthinai ledes unfold sentence-by-sentence (`data-lines` engine, JS-applied)
+- **Landscape transitions**: veil tints toward the destination landscape's tone before navigating (`viraiVeilTone`)
+- **Micro**: bag-count ring pulse, material sheen + slow tactile zoom on craft imagery, link nudges, emotion words breathe
+
+Rhythm rule: shop grids light once then rest; craft band stays still; only heroes/collections carry continuous loops.
+
 ## Approved image library — integrated
 
 The full VIRAI asset system lives in `site/img/` and is wired per the master spec:

@@ -1,7 +1,29 @@
 (function(){
   "use strict";
   var params = new URLSearchParams(location.search);
-  var p = VIRAI.productById(params.get("id")) || VIRAI.productById("kurinji-candle");
+  var p = VIRAI.productById(params.get("id"));
+
+  if(!p){
+    document.title = "Object Not Found | VIRAI";
+    var metaDesc404 = document.querySelector('meta[name="description"]');
+    if(metaDesc404) metaDesc404.setAttribute("content", "The piece you are looking for is not here. Explore Ainthinai, Collection 01.");
+    document.documentElement.style.setProperty("--tone", "#8B7F6C");
+    var host = document.getElementById("main");
+    if(host) host.innerHTML =
+      '<section class="wrap center" style="padding:clamp(5rem,12vw,9rem) 0">' +
+        '<p class="kicker">Ainthinai</p>' +
+        '<h1 style="font-size:clamp(1.9rem,3.6vw,2.8rem)">This object is not here.</h1>' +
+        '<p class="lede" style="margin:1.2rem auto 0">The piece you are looking for may have been renamed or retired. The collection, however, remains.</p>' +
+        '<div style="margin-top:2.4rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">' +
+          '<a class="btn btn-solid" href="shop.html">Shop Fragrance</a>' +
+          '<a class="btn btn-line" href="ainthinai.html">Explore Ainthinai</a>' +
+        '</div>' +
+      '</section>';
+    var sticky = document.getElementById("stickyBuy");
+    if(sticky && sticky.parentNode) sticky.parentNode.removeChild(sticky);
+    viraiTrack("product_not_found", { requested:params.get("id") });
+    return;
+  }
   var land = p.landscape ? VIRAI.landscapes[p.landscape] : null;
 
   document.title = p.name + " | VIRAI — Ainthinai";
@@ -113,16 +135,23 @@
   }, { passive:true });
   document.getElementById("stickyBuy").style.transform = "translateY(110%)";
 
-  var related = VIRAI.products.filter(function(x){
-    return x.id !== p.id && ((x.landscape && x.landscape === p.landscape) || (!p.landscape));
-  });
-  if(related.length < 4){
-    VIRAI.products.forEach(function(x){
-      if(related.length >= 4) return;
-      if(x.id !== p.id && related.indexOf(x) === -1 && x.type === "Set") related.push(x);
-    });
-  }
-  related = related.slice(0,4);
+  // Curated companions: same landscape first, then shared fragrance family
+  // and format. For sets (no landscape), the full-size landscapes lead.
+  var related = VIRAI.products.filter(function(x){ return x.id !== p.id; }).map(function(x){
+    var s = 0;
+    if(p.landscape){
+      if(x.landscape === p.landscape) s += 4;
+      if(x.family.indexOf(p.family[0]) !== -1) s += 2;
+      if(x.type === p.type) s += 2;
+    } else {
+      if(x.type === "Candle") s += 3;
+      if(x.type === "Set") s -= 2;
+    }
+    if(x.featured) s += 1;
+    return { x:x, s:s };
+  }).sort(function(a,b){ return b.s - a.s; })
+    .slice(0,4)
+    .map(function(r){ return r.x; });
   document.getElementById("relatedGrid").innerHTML = related.map(window.viraiCard).join("");
   window.viraiReveal();
 

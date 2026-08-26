@@ -12,6 +12,11 @@
   }
 
   function fmt(n){ return window.viraiFmt(n); }
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
 
   if(document.body.dataset.page === "confirmation"){
     renderConfirmation();
@@ -35,7 +40,7 @@
     return '<div class="sum-line">' +
       '<div class="sum-art">'+(window.viraiPimg ? window.viraiPimg(p,"a") : '')+'</div>' +
       '<div class="sum-info"><div class="n">'+p.name+'</div>' +
-      '<div class="m">Qty '+i.qty+(i.giftWrap?' \u00B7 gift wrap'+(i.message?' \u00B7 \u201C'+i.message+'\u201D':''):'')+'</div></div>' +
+      '<div class="m">Qty '+i.qty+(i.giftWrap?' \u00B7 gift wrap'+(i.message?' \u00B7 \u201C'+esc(i.message)+'\u201D':''):'')+'</div></div>' +
       '<span class="price" style="white-space:nowrap">'+fmt((p.price+(i.giftWrap?150:0))*i.qty)+'</span>' +
       '</div>';
   }).join("");
@@ -67,9 +72,14 @@
     e.preventDefault();
     var firstInvalid = null;
     Array.prototype.forEach.call(this.querySelectorAll("[required]"), function(el){
-      var ok = el.value && el.value.trim().length > 0;
-      if(ok && el.type === "email") ok = /.+@.+\..+/.test(el.value);
+      var v = el.value ? el.value.trim() : "";
+      var ok = v.length > 0;
+      if(ok && el.type === "email") ok = /.+@.+\..+/.test(v);
+      if(ok && el.id === "f-pin") ok = /^\d{6}$/.test(v);
+      if(ok && el.id === "f-phone") ok = /^(\+91)?[6-9]\d{9}$/.test(v.replace(/[\s-]/g, ""));
       el.style.borderColor = ok ? "" : "#A2593B";
+      if(ok) el.removeAttribute("aria-invalid");
+      else el.setAttribute("aria-invalid","true");
       if(!ok && !firstInvalid) firstInvalid = el;
     });
     if(firstInvalid){ firstInvalid.focus(); return; }
@@ -100,10 +110,14 @@
   function renderConfirmation(){
     var o = store(ORDER_KEY);
     if(!o){ location.replace("index.html"); return; }
-    viraiTrack("purchase", {
-      order_id:o.id, value:o.total, items:o.items.length,
-      shipping_method:o.shippingMethod
-    });
+    if(!o.tracked){
+      o.tracked = true;
+      store(ORDER_KEY, o);
+      viraiTrack("purchase", {
+        order_id:o.id, value:o.total, items:o.items.length,
+        shipping_method:o.shippingMethod
+      });
+    }
     document.getElementById("ordNo").textContent = o.id;
     document.getElementById("confEmail").textContent = o.contact.email;
 
@@ -123,6 +137,6 @@
 
     var a = o.contact;
     document.getElementById("confAddr").innerHTML =
-      a.name+"<br>"+a.address+"<br>"+a.city+" "+a.pincode+"<br>"+(a.phone||"");
+      esc(a.name)+"<br>"+esc(a.address)+"<br>"+esc(a.city)+" "+esc(a.pincode)+"<br>"+(a.phone ? esc(a.phone) : "");
   }
 })();

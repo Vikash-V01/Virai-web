@@ -11,6 +11,32 @@
   function $(s,c){ return (c||document).querySelector(s); }
   function $all(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
 
+  // --- Keyboard focus guard: keeps Tab cycling inside an open overlay -----
+  var trapEl = null;
+  var trapReturn = null;
+  function focusables(el){
+    return $all('a[href],button:not([disabled]),input:not([type="hidden"]),select,textarea,[tabindex]:not([tabindex="-1"])', el)
+      .filter(function(n){ return !!(n.offsetWidth || n.offsetHeight || n.getClientRects().length); });
+  }
+  function setTrap(el, returnTo){
+    trapEl = el || null;
+    if(el){ trapReturn = returnTo || null; }
+  }
+  function releaseTrap(){
+    var back = trapReturn;
+    trapEl = null; trapReturn = null;
+    if(back && typeof back.focus === "function"){ try{ back.focus(); }catch(e){} }
+  }
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Tab" || !trapEl) return;
+    var f = focusables(trapEl);
+    if(!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    var cur = document.activeElement;
+    if(e.shiftKey && (!trapEl.contains(cur) || cur === first)){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && (cur === last || !trapEl.contains(cur))){ e.preventDefault(); first.focus(); }
+  });
+
   var VESSELS = {
     kurinji:"deep blue vessel", mullai:"forest green vessel", marutham:"terracotta vessel",
     neithal:"coastal blue vessel", palai:"warm sand-toned vessel"
@@ -248,10 +274,28 @@
     $all("[data-rm]", drawer).forEach(function(b){
       b.addEventListener("click", function(){ removeItem(parseInt(b.dataset.rm,10)); });
     });
+
+    // innerHTML replacement drops the focused node; park focus back inside.
+    if(drawer.classList.contains("open") && !drawer.contains(document.activeElement)){
+      var x = $(".drawer-x", drawer);
+      if(x) x.focus();
+    }
   }
 
-  function openDrawer(){ ensureDrawer(); renderDrawer(); overlay.classList.add("open"); drawer.classList.add("open"); document.body.style.overflow = "hidden"; }
-  function closeDrawer(){ if(!drawer) return; overlay.classList.remove("open"); drawer.classList.remove("open"); document.body.style.overflow = ""; }
+  function openDrawer(opener){
+    ensureDrawer(); renderDrawer();
+    overlay.classList.add("open"); drawer.classList.add("open");
+    document.body.style.overflow = "hidden";
+    setTrap(drawer, opener || null);
+    var x = $(".drawer-x", drawer);
+    if(x) x.focus();
+  }
+  function closeDrawer(){
+    if(!drawer) return;
+    overlay.classList.remove("open"); drawer.classList.remove("open");
+    document.body.style.overflow = "";
+    if(trapEl === drawer) releaseTrap();
+  }
   window.viraiOpenBag = openDrawer;
 
   // --- Tactile Add-to-Bag: a fragment of the object travels to the bag ---
@@ -409,17 +453,30 @@
     var burger = $(".burger");
     var mmenu = $("#mmenu");
     if(burger && mmenu){
+      function closeMenu(){
+        mmenu.classList.remove("open");
+        burger.setAttribute("aria-expanded","false");
+        document.body.style.overflow = "";
+        if(trapEl === mmenu) releaseTrap();
+      }
       burger.addEventListener("click", function(){
         var open = mmenu.classList.toggle("open");
         burger.setAttribute("aria-expanded", open ? "true" : "false");
         document.body.style.overflow = open ? "hidden" : "";
+        if(open){
+          setTrap(mmenu, burger);
+          var firstF = focusables(mmenu)[0];
+          if(firstF) firstF.focus();
+        }
+        else if(trapEl === mmenu){ releaseTrap(); }
+      });
+      var mmClose = $(".mm-close", mmenu);
+      if(mmClose) mmClose.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", function(e){
+        if(e.key === "Escape" && mmenu.classList.contains("open")) closeMenu();
       });
       $all("a", mmenu).forEach(function(a){
-        a.addEventListener("click", function(){
-          mmenu.classList.remove("open");
-          burger.setAttribute("aria-expanded","false");
-          document.body.style.overflow = "";
-        });
+        a.addEventListener("click", closeMenu);
       });
     }
 
@@ -428,10 +485,27 @@
         var acc = h.parentElement;
         var body = $(".acc-body", acc);
         var isOpen = acc.hasAttribute("data-open");
-        if(isOpen){ acc.removeAttribute("data-open"); body.style.maxHeight = "0px"; }
+        if(isOpen){
+          // Re-materialise a pixel height first so "none" can animate to 0.
+          if(getComputedStyle(body).maxHeight === "none"){
+            body.style.maxHeight = body.scrollHeight + "px";
+            void body.offsetHeight;
+          }
+          acc.removeAttribute("data-open");
+          h.setAttribute("aria-expanded","false");
+          body.style.maxHeight = "0px";
+        }
         else{
           acc.setAttribute("data-open","");
+          h.setAttribute("aria-expanded","true");
           body.style.maxHeight = body.scrollHeight + "px";
+          // Once fully open, unclamp so window resizes never clip content.
+          body.addEventListener("transitionend", function te(ev){
+            if(ev.propertyName === "max-height"){
+              body.removeEventListener("transitionend", te);
+              if(acc.hasAttribute("data-open")) body.style.maxHeight = "none";
+            }
+          });
         }
       });
     });
@@ -450,7 +524,7 @@
         return;
       }
       var bagBtn = e.target.closest("[data-open-bag]");
-      if(bagBtn){ e.preventDefault(); openDrawer(); }
+      if(bagBtn){ e.preventDefault(); openDrawer(bagBtn); }
     });
 
     $all("form[data-form='newsletter']").forEach(function(f){
@@ -520,6 +594,10 @@
     var veil = document.createElement("div");
     veil.className = "vr-veil";
     document.body.appendChild(veil);
+    // Experience layer may tint the veil toward the destination's air
+    window.viraiVeilTone = function(bg){
+      try{ veil.style.background = bg || ""; }catch(e){}
+    };
     if(MOTION){
       // Entrance fade (CSS-driven, self-completing).
       requestAnimationFrame(function(){ veil.classList.add("vr-veil-enter"); });
@@ -528,6 +606,7 @@
     window.addEventListener("pageshow", function(ev){
       document.documentElement.classList.remove("vr-leaving");
       if(ev.persisted){
+        veil.style.background = "";
         veil.classList.remove("vr-veil-enter");
         if(MOTION) requestAnimationFrame(function(){ veil.classList.add("vr-veil-enter"); });
       }
@@ -706,6 +785,16 @@
     });
   }
 
+  // The sensory experience layer is progressive: loaded only when
+  // motion is welcome, and never required for content or commerce.
+  function initExperience(){
+    if(!MOTION) return;
+    var s = document.createElement("script");
+    s.src = "js/experience.js";
+    s.onerror = function(){};
+    document.head.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded", function(){
     try{ initPageTransitions(); }catch(e){ console.error("[virai] initPageTransitions failed:", e); }
     try{ initChrome(); }catch(e){ console.error("[virai] initChrome failed:", e); }
@@ -715,5 +804,6 @@
     try{ initReveals(); }catch(e){ console.error("[virai] initReveals failed:", e); }
     try{ initHeroMotion(); }catch(e){ console.error("[virai] initHeroMotion failed:", e); }
     try{ initLandSwitcher(); }catch(e){ console.error("[virai] initLandSwitcher failed:", e); }
+    try{ initExperience(); }catch(e){ console.error("[virai] initExperience failed:", e); }
   });
 })();

@@ -3,84 +3,41 @@
 /* ============================================================
    VIRAI — HOME WORLD-BANNER / CRAFT TRANSITION
    ============================================================ */
-.world-banner{
-  position:relative;
-  display:block;
-  width:100%;
-  margin:0;
-  padding:0;
-  line-height:0;
-}
-
-.world-banner .wb-link,
-.world-banner picture,
-.world-banner img{
-  display:block;
-  width:100%;
-}
-
+.world-banner{position:relative;display:block;width:100%;margin:0;padding:0;line-height:0}
+.world-banner .wb-link,.world-banner picture,.world-banner img{display:block;width:100%}
 .world-banner img{height:auto}
-
-.world-banner + .craft-band{
-  margin-top:0 !important;
-  padding-top:0 !important;
-  border-top:0;
-}
+.world-banner + .craft-band{margin-top:0 !important;padding-top:0 !important;border-top:0}
 .world-banner + .craft-band .wrap{padding-top:0 !important}
 .world-banner + .craft-band .center{margin-top:0 !important;padding-top:0 !important}
 .world-banner + .craft-band .center > :first-child{margin-top:0 !important}
 
 /* ============================================================
    VIRAI — HOME HERO CLOUD PARALLAX
-
    The landscape photograph is the grounded layer. Clouds are a
    separate transparent SVG layer and are the ONLY hero visual
    layer moved by scroll. Text/content never participates in the
    parallax calculation.
    ============================================================ */
-.hero-media{
-  isolation:isolate;
-  overflow:hidden;
-}
+.hero-media{isolation:isolate;overflow:hidden}
+.hero-media .hero-scrim{z-index:3}
+.hero-media .vr-home-clouds{position:absolute;inset:-8% -14%;z-index:2;display:block !important;pointer-events:none;background-image:url("../img/hero-clouds.svg");background-repeat:no-repeat;background-position:center top;background-size:cover;opacity:.62;transform:translate3d(0,0,0) scale(1.04);transform-origin:center center;will-change:transform;contain:paint}
+.hero-media .vr-atmo{z-index:2}.hero-media .hero-img{position:relative;z-index:0}
+@media (max-width:880px){.hero-media .vr-home-clouds{inset:-7% -10%;opacity:.52;background-position:center top;transform:translate3d(0,0,0) scale(1.035)}}
+@media (prefers-reduced-motion:reduce){.hero-media .vr-home-clouds{transform:none !important}}
 
-.hero-media .hero-scrim{
-  z-index:3;
-}
-
-/* Injected by experience.js. Kept as a real layer rather than a
-   pseudo-element so its transform is independent of the photo. */
-.hero-media .vr-home-clouds{
-  position:absolute;
-  inset:-8% -14%;
-  z-index:2;
-  display:block !important;
-  pointer-events:none;
-  background-image:url("../img/hero-clouds.svg");
-  background-repeat:no-repeat;
-  background-position:center top;
-  background-size:cover;
-  opacity:.62;
-  transform:translate3d(0,0,0) scale(1.04);
-  transform-origin:center center;
-  will-change:transform;
-  contain:paint;
-}
-
-/* The cloud asset is atmospheric, so keep it below the text and
-   above the landscape. */
-.hero-media .vr-atmo{z-index:2}
-.hero-media .hero-img{position:relative;z-index:0}
-
-/* Mobile uses less lateral travel to avoid a visible edge. */
-@media (max-width:880px){
-  .hero-media .vr-home-clouds{
-    inset:-7% -10%;
-    opacity:.52;
-    background-position:center top;
-    transform:translate3d(0,0,0) scale(1.035);
-  }
-}
-
-@media (prefers-reduced-motion:reduce){
-  .hero-media .vr-home-clouds{transform:none !important}
-}
+/* ============================================================
+   VIRAI — SCROLL-LIT KURINJI SCENE
+   Two matched states crossfade as the user scrolls through the
+   section. The candle remains unlit at the start and becomes lit
+   progressively; the original scene composition never moves.
+   ============================================================ */
+.virai-candle-scene{position:relative;overflow:hidden}
+.virai-candle-scene .scene-media{position:relative;min-height:clamp(520px,72vh,820px);overflow:hidden;background:var(--smoke)}
+.virai-candle-scene .scene-state{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;max-width:none}
+.virai-candle-scene .scene-unlit{opacity:1;z-index:0}
+.virai-candle-scene .scene-lit{opacity:0;z-index:1}
+.virai-candle-scene .scene-candle-glow{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(circle at 64% 66%,rgba(255,210,128,.20) 0%,rgba(255,194,99,.10) 8%,rgba(255,194,99,0) 24%);mix-blend-mode:screen}
+.virai-candle-scene .scene-copy{position:relative;z-index:4;height:100%;min-height:inherit;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding-block:clamp(3rem,8vh,6rem);color:var(--rice);text-shadow:0 2px 22px rgba(20,17,14,.28)}
+.virai-candle-scene .scene-copy .kicker{color:#eee5d6}.virai-candle-scene .scene-copy h2{font-size:clamp(2.4rem,5.3vw,4.3rem);max-width:10ch}.virai-candle-scene .scene-copy p:not(.kicker){font-family:var(--serif);font-size:clamp(1.05rem,1.5vw,1.25rem);max-width:40ch;margin-top:1rem}.virai-candle-scene .scene-copy .link-u{color:var(--rice);border-color:rgba(245,241,232,.75);margin-top:1.8rem}
+@media (max-width:880px){.virai-candle-scene .scene-media{min-height:78svh}.virai-candle-scene .scene-copy{justify-content:flex-end;padding-bottom:clamp(2.5rem,9vh,5rem)}.virai-candle-scene .scene-copy h2{max-width:12ch}.virai-candle-scene .scene-copy p:not(.kicker){max-width:31ch}}
+@media (prefers-reduced-motion:reduce){.virai-candle-scene .scene-lit{opacity:0}.virai-candle-scene .scene-candle-glow{opacity:0}}

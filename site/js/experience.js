@@ -14,11 +14,7 @@
 
   function $(s,c){ return (c||doc).querySelector(s); }
   function $all(s,c){ return Array.prototype.slice.call((c||doc).querySelectorAll(s)); }
-  function el(tag, cls){
-    var n = doc.createElement(tag);
-    if(cls) n.className = cls;
-    return n;
-  }
+  function el(tag, cls){ var n = doc.createElement(tag); if(cls) n.className = cls; return n; }
   function rand(min,max){ return min + Math.random()*(max-min); }
 
   function drift(target, opts){
@@ -37,41 +33,29 @@
     var pic = $("picture", container) || container.firstElementChild;
     if(!pic) return null;
     var host = el("div","vr-drift-host");
-    container.insertBefore(host, pic);
-    host.appendChild(pic);
-    container.dataset.vrDrift = "1";
-    drift(host, opts);
-    return host;
+    container.insertBefore(host, pic); host.appendChild(pic); container.dataset.vrDrift = "1";
+    drift(host, opts); return host;
   }
   function atmo(host, kind){
     if(!host || $(".vr-atmo", host)) return;
     var d = el("div","vr-atmo vr-atmo--" + kind);
-    d.setAttribute("aria-hidden","true");
-    d.innerHTML = '<i class="a"></i><i class="b"></i>';
-    host.appendChild(d);
+    d.setAttribute("aria-hidden","true"); d.innerHTML = '<i class="a"></i><i class="b"></i>'; host.appendChild(d);
   }
   function dress(media){
     if($(".vr-flamehost", media)) return;
-    var f = el("div","vr-flamehost");
-    f.setAttribute("aria-hidden","true");
-    f.innerHTML = '<span class="vr-flame"></span><span class="vr-pool"></span><span class="vr-wisp wa"></span><span class="vr-wisp wb"></span>';
-    media.appendChild(f);
+    var f = el("div","vr-flamehost"); f.setAttribute("aria-hidden","true");
+    f.innerHTML = '<span class="vr-flame"></span><span class="vr-pool"></span><span class="vr-wisp wa"></span><span class="vr-wisp wb"></span>'; media.appendChild(f);
   }
   function lightRitual(targets, opts){
     opts = opts || {};
     if(typeof IntersectionObserver === "undefined"){
-      targets.forEach(function(m){ m.classList.add("vr-canlit","vr-lit"); dress(m); });
-      return;
+      targets.forEach(function(m){ m.classList.add("vr-canlit","vr-lit"); dress(m); }); return;
     }
     var io = new IntersectionObserver(function(entries){
-      var batch = entries.filter(function(e){ return e.isIntersecting; });
-      if(!batch.length) return;
+      var batch = entries.filter(function(e){ return e.isIntersecting; }); if(!batch.length) return;
       batch.sort(function(a,b){ return a.target.getBoundingClientRect().top - b.target.getBoundingClientRect().top; });
       batch.forEach(function(e,i){
-        io.unobserve(e.target);
-        var m = e.target;
-        m.classList.add("vr-canlit");
-        dress(m);
+        io.unobserve(e.target); var m = e.target; m.classList.add("vr-canlit"); dress(m);
         setTimeout(function(){ m.classList.add("vr-lit"); }, (opts.baseDelay || 240) + Math.min(i,4) * (opts.step || 780));
       });
     }, { threshold: opts.threshold || 0.45, rootMargin: "0px 0px -6% 0px" });
@@ -91,18 +75,14 @@
   var pdpArt = $("#pdpArt");
   if(pdpArt){
     lightRitual([pdpArt], { threshold:0.25, baseDelay:420 });
-    if(typeof MutationObserver !== "undefined"){
-      new MutationObserver(function(){
-        pdpArt.classList.remove("vr-canlit","vr-lit");
-        dress(pdpArt);
-        requestAnimationFrame(function(){ pdpArt.classList.add("vr-canlit","vr-lit"); });
-      }).observe(pdpArt, { childList:true });
-    }
+    if(typeof MutationObserver !== "undefined") new MutationObserver(function(){
+      pdpArt.classList.remove("vr-canlit","vr-lit"); dress(pdpArt);
+      requestAnimationFrame(function(){ pdpArt.classList.add("vr-canlit","vr-lit"); });
+    }).observe(pdpArt, { childList:true });
   }
 
   var lineIO = typeof IntersectionObserver !== "undefined"
-    ? new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("vr-lines-in"); lineIO.unobserve(e.target); } }); }, { threshold:0.5 })
-    : null;
+    ? new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("vr-lines-in"); lineIO.unobserve(e.target); } }); }, { threshold:0.5 }) : null;
   function unfoldLines(node){
     if(node.dataset.vrLines) return;
     node.dataset.vrLines = "1";
@@ -110,33 +90,22 @@
     var parts = text.match(/[^.!?…]+[.!?…]+["'\u2019\u201D)]*\s*|[^.!?…]+$/g) || [text];
     node.textContent = "";
     parts.forEach(function(sentence, i){
-      var outer = el("span","vr-line");
-      var inner = el("span");
-      inner.textContent = sentence.trim();
-      inner.style.setProperty("--li", i);
-      outer.appendChild(inner);
-      node.appendChild(outer);
-      node.appendChild(doc.createTextNode(" "));
+      var outer = el("span","vr-line"), inner = el("span"); inner.textContent = sentence.trim(); inner.style.setProperty("--li", i);
+      outer.appendChild(inner); node.appendChild(outer); node.appendChild(doc.createTextNode(" "));
     });
-    node.classList.add("vr-lines-ready");
-    if(lineIO) lineIO.observe(node); else node.classList.add("vr-lines-in");
+    node.classList.add("vr-lines-ready"); if(lineIO) lineIO.observe(node); else node.classList.add("vr-lines-in");
   }
 
   var page = doc.body.dataset.page || "info";
   if(page === "home"){
-    var heroMedia = $(".hero-media");
-    if(heroMedia) atmo(heroMedia, "dawn");
-    var houseLede = $(".intro-grid .lede");
-    if(houseLede) unfoldLines(houseLede);
+    var heroMedia = $(".hero-media"); if(heroMedia) atmo(heroMedia, "dawn");
+    var houseLede = $(".intro-grid .lede"); if(houseLede) unfoldLines(houseLede);
     var stage = $(".ls-stage");
     if(stage){
-      drift(stage, { dur:52, dx:1.1, dy:-0.5, from:"1.01" });
-      atmo(stage, "kurinji");
+      drift(stage, { dur:52, dx:1.1, dy:-0.5, from:"1.01" }); atmo(stage, "kurinji");
       var switcher = $("#landSwitcher");
       if(switcher) switcher.addEventListener("click", function(e){
-        var b = e.target.closest("[data-land]");
-        if(!b) return;
-        var oldA = $(".vr-atmo", stage);
+        var b = e.target.closest("[data-land]"); if(!b) return; var oldA = $(".vr-atmo", stage);
         if(oldA) oldA.className = "vr-atmo vr-atmo--" + b.dataset.land;
       });
     }
@@ -145,28 +114,21 @@
   }
   if(page === "collection"){
     $all(".stack > section").forEach(function(sec, i){
-      var kind = sec.dataset.land || "kurinji";
-      var bg = $(".panel-bg", sec);
+      var kind = sec.dataset.land || "kurinji", bg = $(".panel-bg", sec);
       if(bg){ drift($("picture", bg), { dur:54 + i*6, dx:(i%2 ? -1.2 : 1.3), dy:-0.6, from:"1.03" }); atmo(bg, kind); }
     });
-    var aintLede = $(".ainth-intro .lede");
-    if(aintLede) unfoldLines(aintLede);
+    var aintLede = $(".ainth-intro .lede"); if(aintLede) unfoldLines(aintLede);
   }
   if(page === "landscape"){
-    var params = new URLSearchParams(location.search);
-    var kind = params.get("id");
+    var params = new URLSearchParams(location.search), kind = params.get("id");
     if(!VIRAI.landscapes[kind]) kind = "kurinji";
-    var lh = $("#lhMedia");
-    if(lh){ driftWrap(lh, { dur:56, dx:1.3, dy:-0.6, from:"1.03" }); atmo(lh, kind); }
+    var lh = $("#lhMedia"); if(lh) { driftWrap(lh, { dur:56, dx:1.3, dy:-0.6, from:"1.03" }); atmo(lh, kind); }
   }
 
   doc.addEventListener("click", function(e){
     if(e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var a = e.target.closest("a[href]");
-    if(!a || !window.viraiVeilTone) return;
-    var href = a.getAttribute("href") || "";
-    var m = href.match(/^landscape\.html\?id=([a-z]+)/);
-    var L = m && VIRAI.landscapes[m[1]];
+    var a = e.target.closest("a[href]"); if(!a || !window.viraiVeilTone) return;
+    var href = a.getAttribute("href") || "", m = href.match(/^landscape\.html\?id=([a-z]+)/), L = m && VIRAI.landscapes[m[1]];
     if(L) window.viraiVeilTone("linear-gradient(168deg," + L.tint + " 0%," + L.tone + "26 58%,#F5F1E8 100%)");
     else if(href.indexOf("ainthinai.html") === 0) window.viraiVeilTone("linear-gradient(170deg,#EFEBE1 0%,#E7E1D5 55%,#F5F1E8 100%)");
     else window.viraiVeilTone("");
@@ -174,79 +136,42 @@
 
   /* --- HOME HERO SCROLL PARALLAX ---------------------------------- */
   if(page === "home"){
-    var hero = $(".hero");
-    var heroImg = $("#heroImg");
-    var heroContent = $(".hero-content");
-    var heroAtmo = $(".hero-media .vr-atmo");
+    var hero = $(".hero"), heroImg = $("#heroImg"), heroContent = $(".hero-content"), heroAtmo = $(".hero-media .vr-atmo");
     if(hero && heroImg && heroContent){
-      hero.classList.add("vr-home-parallax");
-      heroImg.style.willChange = "transform";
-      heroContent.style.willChange = "transform,opacity";
+      hero.classList.add("vr-home-parallax"); heroImg.style.willChange = "transform"; heroContent.style.willChange = "transform,opacity";
       if(heroAtmo) heroAtmo.style.willChange = "transform";
 
-      /*
-       * The reference effect is depth, not a drifting hero image.
-       * Build a very restrained atmospheric duplicate from the same
-       * Kurinji photograph. A top-to-transparent mask isolates the
-       * sky/cloud region so only the distant atmosphere moves over
-       * the grounded landscape. It is driven by scroll, never by an
-       * autonomous animation.
-       */
+      /* A masked duplicate of the existing Kurinji photograph creates a
+         dedicated sky/cloud layer. No second image asset is downloaded. */
       var cloudLayer = $(".vr-home-clouds", hero);
       if(!cloudLayer){
-        cloudLayer = el("div","vr-home-clouds");
-        cloudLayer.setAttribute("aria-hidden","true");
+        cloudLayer = el("div","vr-home-clouds"); cloudLayer.setAttribute("aria-hidden","true");
         var cloudSrc = heroImg.currentSrc || heroImg.getAttribute("src") || "img/11.webp";
-        cloudLayer.style.position = "absolute";
-        cloudLayer.style.inset = "-10%";
-        cloudLayer.style.zIndex = "1";
-        cloudLayer.style.pointerEvents = "none";
+        cloudLayer.style.position = "absolute"; cloudLayer.style.inset = "-10%"; cloudLayer.style.zIndex = "1"; cloudLayer.style.pointerEvents = "none";
         cloudLayer.style.backgroundImage = "url(\"" + cloudSrc.replace(/\"/g,"%22") + "\")";
-        cloudLayer.style.backgroundRepeat = "no-repeat";
-        cloudLayer.style.backgroundPosition = "center center";
-        cloudLayer.style.backgroundSize = "cover";
-        cloudLayer.style.opacity = "0.24";
-        cloudLayer.style.mixBlendMode = "screen";
-        cloudLayer.style.webkitMaskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.96) 42%, rgba(0,0,0,0.48) 58%, rgba(0,0,0,0) 72%)";
-        cloudLayer.style.maskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.96) 42%, rgba(0,0,0,0.48) 58%, rgba(0,0,0,0) 72%)";
-        cloudLayer.style.willChange = "transform";
-        heroMedia.appendChild(cloudLayer);
+        cloudLayer.style.backgroundRepeat = "no-repeat"; cloudLayer.style.backgroundPosition = "center center"; cloudLayer.style.backgroundSize = "cover";
+        cloudLayer.style.opacity = "0.32"; cloudLayer.style.mixBlendMode = "screen";
+        cloudLayer.style.webkitMaskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 44%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0) 72%)";
+        cloudLayer.style.maskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 44%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0) 72%)";
+        cloudLayer.style.willChange = "transform"; heroMedia.appendChild(cloudLayer);
       }
 
-      /* The old gradient atmosphere should not fight the new
-         scroll-driven cloud motion on the homepage. Keep it as a
-         quiet light layer and pause its autonomous cloud loops. */
-      if(heroAtmo){
-        $all("i", heroAtmo).forEach(function(n){ n.style.animation = "none"; });
-        heroAtmo.style.opacity = "0.34";
-        heroAtmo.style.willChange = "transform";
-      }
+      if(heroAtmo){ $all("i", heroAtmo).forEach(function(n){ n.style.animation = "none"; }); heroAtmo.style.opacity = "0.30"; heroAtmo.style.willChange = "transform"; }
 
-      var ticking = false;
-      var raf = 0;
+      var ticking = false, raf = 0;
       function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
       function render(){
         ticking = false;
-        var rect = hero.getBoundingClientRect();
-        var h = Math.max(hero.offsetHeight || window.innerHeight,1);
-        var p = clamp(-rect.top / h,0,1);
-        var mobile = window.innerWidth < 881;
-
-        /* Grounded base landscape: deliberately restrained. */
-        var imageY = p * (mobile ? 3.4 : 5.2);
-        var scale = 1.08 + p * (mobile ? 0.012 : 0.018);
-
-        /* Copy remains calm and does not fly in from either side. */
+        var rect = hero.getBoundingClientRect(), h = Math.max(hero.offsetHeight || window.innerHeight,1), p = clamp(-rect.top / h,0,1), mobile = window.innerWidth < 881;
+        var imageY = p * (mobile ? 3.8 : 6.0);
+        var scale = 1.08 + p * (mobile ? 0.014 : 0.020);
         var copyY = p * (mobile ? -0.7 : -1.3);
         var opacity = 1 - Math.max(0,p - 0.5) * 1.35;
 
-        /* Distant cloud/mist layer moves farther and horizontally,
-           creating the depth relationship the reference demonstrates. */
-        var cloudX = p * (mobile ? 1.8 : 4.2);
-        var cloudY = p * (mobile ? -2.4 : -4.8);
-        var cloudScale = 1.06 + p * (mobile ? 0.012 : 0.022);
-
-        /* Existing soft light atmosphere moves only a little. */
+        /* Clouds deliberately travel farther than the grounded mountain. */
+        var cloudX = p * (mobile ? 3.0 : 7.0);
+        var cloudY = p * (mobile ? -3.6 : -7.0);
+        var cloudScale = 1.06 + p * (mobile ? 0.016 : 0.028);
         var atmoY = p * (mobile ? 3.5 : 5.5);
 
         heroImg.style.transform = "translate3d(0,"+imageY.toFixed(3)+"vh,0) scale("+scale.toFixed(4)+")";
@@ -255,20 +180,9 @@
         cloudLayer.style.transform = "translate3d("+cloudX.toFixed(3)+"vw,"+cloudY.toFixed(3)+"vh,0) scale("+cloudScale.toFixed(4)+")";
         if(heroAtmo) heroAtmo.style.transform = "translate3d(0,"+atmoY.toFixed(3)+"vh,0)";
       }
-      function request(){
-        if(ticking) return;
-        ticking = true;
-        raf = window.requestAnimationFrame(render);
-      }
-      window.addEventListener("scroll",request,{passive:true});
-      window.addEventListener("resize",request,{passive:true});
-      window.addEventListener("orientationchange",request,{passive:true});
-      window.addEventListener("load",request,{once:true});
-      request();
-      document.addEventListener("visibilitychange",function(){
-        if(document.hidden && raf){ window.cancelAnimationFrame(raf); raf=0; ticking=false; }
-        else if(!document.hidden) request();
-      });
+      function request(){ if(ticking) return; ticking = true; raf = window.requestAnimationFrame(render); }
+      window.addEventListener("scroll",request,{passive:true}); window.addEventListener("resize",request,{passive:true}); window.addEventListener("orientationchange",request,{passive:true}); window.addEventListener("load",request,{once:true}); request();
+      document.addEventListener("visibilitychange",function(){ if(document.hidden && raf){ window.cancelAnimationFrame(raf); raf=0; ticking=false; } else if(!document.hidden) request(); });
     }
   }
 })();

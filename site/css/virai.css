@@ -13,11 +13,9 @@
 
 /* ============================================================
    VIRAI — LAYERED KURINJI PARALLAX
-
-   The hero is a true 2.5D scene. Every transparent layer is a
-   separate depth plane and moves at a different rate from the
-   scroll position. The base sky stays calm; foreground detail
-   moves most, creating a camera-through-landscape feeling.
+   Cinematic 2.5D landscape: calm sky, drifting atmosphere,
+   progressively stronger foreground motion. The assets are
+   deliberately oversized so no edge/gap is exposed during travel.
    ============================================================ */
 .hero-layered{
   position:relative;
@@ -25,56 +23,61 @@
   height:min(1080px,100svh);
   overflow:hidden;
   isolation:isolate;
-  background:#22243b;
+  background:#201f35;
 }
 .hero-layer-scene{
   position:absolute;
-  inset:0;
+  inset:-3%;
   overflow:hidden;
   pointer-events:none;
   z-index:0;
   contain:paint;
-  background:#22243b;
+  background:#201f35;
 }
 .hero-layer{
   position:absolute;
-  left:-12%;
-  top:-14%;
-  width:124%;
-  height:128%;
+  left:-18%;
+  top:-20%;
+  width:136%;
+  height:140%;
   max-width:none;
   display:block;
   object-fit:cover;
   object-position:center center;
   user-select:none;
   pointer-events:none;
-  transform:translate3d(0,0,0) scale(1.06);
+  transform:translate3d(0,0,0) scale(1.08);
   transform-origin:center center;
   will-change:transform;
   backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
-.hero-layer-sky{z-index:1;transform:translate3d(0,0,0) scale(1.045)}
-.hero-layer-clouds{z-index:2;transform:translate3d(0,0,0) scale(1.055)}
-.hero-layer-mountains-far{z-index:3;transform:translate3d(0,0,0) scale(1.065)}
-.hero-layer-mist{z-index:4;transform:translate3d(0,0,0) scale(1.075)}
-.hero-layer-mountains-mid{z-index:5;transform:translate3d(0,0,0) scale(1.085)}
-.hero-layer-mountains-near{z-index:6;transform:translate3d(0,0,0) scale(1.095)}
-.hero-layer-foreground{z-index:7;transform:translate3d(0,0,0) scale(1.11)}
+.hero-layer-sky{z-index:1;transform:translate3d(0,0,0) scale(1.075)}
+.hero-layer-clouds{z-index:2;transform:translate3d(0,0,0) scale(1.085)}
+.hero-layer-mountains-far{z-index:3;transform:translate3d(0,0,0) scale(1.095)}
+.hero-layer-mist{z-index:4;transform:translate3d(0,0,0) scale(1.105)}
+.hero-layer-mountains-mid{z-index:5;transform:translate3d(0,0,0) scale(1.115)}
+.hero-layer-mountains-near{z-index:6;transform:translate3d(0,0,0) scale(1.125)}
+.hero-layer-foreground{z-index:7;transform:translate3d(0,0,0) scale(1.14)}
 .hero-layered .hero-glow{z-index:8}
 .hero-layered .hero-scrim{z-index:9}
-.hero-layered .hero-content{z-index:10}
-.hero-layered .hero-content{position:relative}
+.hero-layered .hero-content{z-index:10;position:relative}
 
-/* Keep layer overscan generous enough that travel never exposes a gap. */
+/* Slight atmospheric softness reinforces depth without turning this into a filter effect. */
+.hero-layer-clouds{opacity:.98}
+.hero-layer-mist{opacity:.82}
+.hero-layer-mountains-far{opacity:.94}
+
 @media (max-width:880px){
-  .hero-layer{left:-20%;top:-12%;width:140%;height:124%}
-  .hero-layer-sky{transform:scale(1.04)}
-  .hero-layer-clouds{transform:scale(1.05)}
-  .hero-layer-mountains-far{transform:scale(1.06)}
-  .hero-layer-mist{transform:scale(1.07)}
-  .hero-layer-mountains-mid{transform:scale(1.08)}
-  .hero-layer-mountains-near{transform:scale(1.095)}
-  .hero-layer-foreground{transform:scale(1.11)}
+  .hero-layer-scene{inset:-4%}
+  .hero-layer{left:-29%;top:-18%;width:158%;height:136%}
+  .hero-layer-sky{transform:scale(1.075)}
+  .hero-layer-clouds{transform:scale(1.09)}
+  .hero-layer-mountains-far{transform:scale(1.10)}
+  .hero-layer-mist{transform:scale(1.11)}
+  .hero-layer-mountains-mid{transform:scale(1.12)}
+  .hero-layer-mountains-near{transform:scale(1.135)}
+  .hero-layer-foreground{transform:scale(1.15)}
 }
 
 @media (prefers-reduced-motion:reduce){

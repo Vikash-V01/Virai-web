@@ -183,6 +183,45 @@
       heroImg.style.willChange = "transform";
       heroContent.style.willChange = "transform,opacity";
       if(heroAtmo) heroAtmo.style.willChange = "transform";
+
+      /*
+       * The reference effect is depth, not a drifting hero image.
+       * Build a very restrained atmospheric duplicate from the same
+       * Kurinji photograph. A top-to-transparent mask isolates the
+       * sky/cloud region so only the distant atmosphere moves over
+       * the grounded landscape. It is driven by scroll, never by an
+       * autonomous animation.
+       */
+      var cloudLayer = $(".vr-home-clouds", hero);
+      if(!cloudLayer){
+        cloudLayer = el("div","vr-home-clouds");
+        cloudLayer.setAttribute("aria-hidden","true");
+        var cloudSrc = heroImg.currentSrc || heroImg.getAttribute("src") || "img/11.webp";
+        cloudLayer.style.position = "absolute";
+        cloudLayer.style.inset = "-10%";
+        cloudLayer.style.zIndex = "1";
+        cloudLayer.style.pointerEvents = "none";
+        cloudLayer.style.backgroundImage = "url(\"" + cloudSrc.replace(/\"/g,"%22") + "\")";
+        cloudLayer.style.backgroundRepeat = "no-repeat";
+        cloudLayer.style.backgroundPosition = "center center";
+        cloudLayer.style.backgroundSize = "cover";
+        cloudLayer.style.opacity = "0.24";
+        cloudLayer.style.mixBlendMode = "screen";
+        cloudLayer.style.webkitMaskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.96) 42%, rgba(0,0,0,0.48) 58%, rgba(0,0,0,0) 72%)";
+        cloudLayer.style.maskImage = "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.96) 42%, rgba(0,0,0,0.48) 58%, rgba(0,0,0,0) 72%)";
+        cloudLayer.style.willChange = "transform";
+        heroMedia.appendChild(cloudLayer);
+      }
+
+      /* The old gradient atmosphere should not fight the new
+         scroll-driven cloud motion on the homepage. Keep it as a
+         quiet light layer and pause its autonomous cloud loops. */
+      if(heroAtmo){
+        $all("i", heroAtmo).forEach(function(n){ n.style.animation = "none"; });
+        heroAtmo.style.opacity = "0.34";
+        heroAtmo.style.willChange = "transform";
+      }
+
       var ticking = false;
       var raf = 0;
       function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
@@ -192,17 +231,35 @@
         var h = Math.max(hero.offsetHeight || window.innerHeight,1);
         var p = clamp(-rect.top / h,0,1);
         var mobile = window.innerWidth < 881;
-        var imageY = p * (mobile ? 4.8 : 7.5);
-        var scale = 1.08 + p * (mobile ? 0.018 : 0.028);
-        var copyY = p * (mobile ? -1.2 : -2.2);
+
+        /* Grounded base landscape: deliberately restrained. */
+        var imageY = p * (mobile ? 3.4 : 5.2);
+        var scale = 1.08 + p * (mobile ? 0.012 : 0.018);
+
+        /* Copy remains calm and does not fly in from either side. */
+        var copyY = p * (mobile ? -0.7 : -1.3);
         var opacity = 1 - Math.max(0,p - 0.5) * 1.35;
-        var atmoY = p * (mobile ? 8 : 12);
+
+        /* Distant cloud/mist layer moves farther and horizontally,
+           creating the depth relationship the reference demonstrates. */
+        var cloudX = p * (mobile ? 1.8 : 4.2);
+        var cloudY = p * (mobile ? -2.4 : -4.8);
+        var cloudScale = 1.06 + p * (mobile ? 0.012 : 0.022);
+
+        /* Existing soft light atmosphere moves only a little. */
+        var atmoY = p * (mobile ? 3.5 : 5.5);
+
         heroImg.style.transform = "translate3d(0,"+imageY.toFixed(3)+"vh,0) scale("+scale.toFixed(4)+")";
         heroContent.style.transform = "translate3d(0,"+copyY.toFixed(3)+"vh,0)";
         heroContent.style.opacity = clamp(opacity,0,1).toFixed(3);
+        cloudLayer.style.transform = "translate3d("+cloudX.toFixed(3)+"vw,"+cloudY.toFixed(3)+"vh,0) scale("+cloudScale.toFixed(4)+")";
         if(heroAtmo) heroAtmo.style.transform = "translate3d(0,"+atmoY.toFixed(3)+"vh,0)";
       }
-      function request(){ if(ticking) return; ticking = true; raf = window.requestAnimationFrame(render); }
+      function request(){
+        if(ticking) return;
+        ticking = true;
+        raf = window.requestAnimationFrame(render);
+      }
       window.addEventListener("scroll",request,{passive:true});
       window.addEventListener("resize",request,{passive:true});
       window.addEventListener("orientationchange",request,{passive:true});

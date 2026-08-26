@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 941" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f8f4" stop-opacity=".46"/>
+      <stop offset=".45" stop-color="#eef1ec" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#eef1ec" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="cloudA" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff" stop-opacity=".72"/>
+      <stop offset=".52" stop-color="#f4f5f0" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#eef0ec" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cloudB" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f9faf7" stop-opacity=".58"/>
+      <stop offset=".58" stop-color="#eef1ed" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#eef1ed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft24" x="-30%" y="-50%" width="160%" height="200%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <filter id="soft42" x="-30%" y="-60%" width="160%" height="220%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+    <filter id="soft70" x="-30%" y="-70%" width="160%" height="240%">
+      <feGaussianBlur stdDeviation="70"/>
+    </filter>
+  </defs>
+
+  <!-- Very soft high-altitude haze -->
+  <path d="M-80 355 C160 260 320 335 510 300 S880 250 1090 310 S1450 280 1760 350 L1760 520 C1480 455 1240 500 1010 450 S600 460 360 500 S90 485 -80 520 Z"
+        fill="url(#mist)" opacity=".42" filter="url(#soft70)"/>
+
+  <!-- Slow-moving cloud bank: left -->
+  <g filter="url(#soft42)" opacity=".78">
+    <ellipse cx="210" cy="300" rx="245" ry="78" fill="url(#cloudA)"/>
+    <ellipse cx="390" cy="330" rx="250" ry="70" fill="url(#cloudB)"/>
+    <ellipse cx="80" cy="355" rx="190" ry="62" fill="url(#cloudB)"/>
+  </g>
+
+  <!-- Mid-distance cloud bank -->
+  <g filter="url(#soft24)" opacity=".62">
+    <ellipse cx="650" cy="270" rx="250" ry="58" fill="url(#cloudB)"/>
+    <ellipse cx="840" cy="305" rx="310" ry="72" fill="url(#cloudA)"/>
+    <ellipse cx="1040" cy="282" rx="240" ry="56" fill="url(#cloudB)"/>
+  </g>
+
+  <!-- Right cloud mass, intentionally asymmetric -->
+  <g filter="url(#soft42)" opacity=".68">
+    <ellipse cx="1330" cy="325" rx="290" ry="82" fill="url(#cloudA)"/>
+    <ellipse cx="1530" cy="285" rx="235" ry="64" fill="url(#cloudB)"/>
+    <ellipse cx="1180" cy="350" rx="205" ry="58" fill="url(#cloudB)"/>
+  </g>
+
+  <!-- Thin valley mist layer -->
+  <path d="M-40 475 C180 430 360 470 555 445 C770 417 920 468 1110 446 C1300 423 1485 455 1715 420 L1715 590 C1470 548 1270 574 1070 550 C850 525 660 570 455 550 C260 532 110 560 -40 535 Z"
+        fill="url(#mist)" opacity=".34" filter="url(#soft42)"/>
+</svg>

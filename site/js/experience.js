@@ -21,7 +21,6 @@
   }
   function rand(min,max){ return min + Math.random()*(max-min); }
 
-  /* --- Continuous drift: a held breath of movement on large imagery --- */
   function drift(target, opts){
     if(!target || target.dataset.vrDrift) return;
     target.dataset.vrDrift = "1";
@@ -33,7 +32,6 @@
     target.style.setProperty("--vr-dx", (opts.dx != null ? opts.dx : rand(0.8,1.6)).toFixed(2) + "vw");
     target.style.setProperty("--vr-dy", (opts.dy != null ? opts.dy : rand(-1.2,-0.4)).toFixed(2) + "vh");
   }
-  /* Wrap the moving <picture> so scrims and overlays stay put */
   function driftWrap(container, opts){
     if(!container || container.dataset.vrDrift) return null;
     var pic = $("picture", container) || container.firstElementChild;
@@ -45,10 +43,6 @@
     drift(host, opts);
     return host;
   }
-
-  /* --- Atmosphere: light and weather passing through a scene ---
-     Pure gradient layers, compositor-only, no filters. Each landscape
-     carries its own air: cloud, dapple, breeze, sheen, haze. */
   function atmo(host, kind){
     if(!host || $(".vr-atmo", host)) return;
     var d = el("div","vr-atmo vr-atmo--" + kind);
@@ -56,12 +50,6 @@
     d.innerHTML = '<i class="a"></i><i class="b"></i>';
     host.appendChild(d);
   }
-
-  /* --- Candle lighting ritual -------------------------------------
-     A candle enters the frame unlit. As it settles into view the
-     wick warms, a small flame gathers, light pools onto the surface,
-     and a faint fragrance-wisp rises. Several candles light in
-     sequence, never together. Tied to scrolling via IntersectionObserver. */
   function dress(media){
     if($(".vr-flamehost", media)) return;
     var f = el("div","vr-flamehost");
@@ -78,9 +66,7 @@
     var io = new IntersectionObserver(function(entries){
       var batch = entries.filter(function(e){ return e.isIntersecting; });
       if(!batch.length) return;
-      batch.sort(function(a,b){
-        return a.target.getBoundingClientRect().top - b.target.getBoundingClientRect().top;
-      });
+      batch.sort(function(a,b){ return a.target.getBoundingClientRect().top - b.target.getBoundingClientRect().top; });
       batch.forEach(function(e,i){
         io.unobserve(e.target);
         var m = e.target;
@@ -91,12 +77,8 @@
     }, { threshold: opts.threshold || 0.45, rootMargin: "0px 0px -6% 0px" });
     targets.forEach(function(m){ io.observe(m); });
   }
-  function collectLitTargets(){
-    return $all(".pcard-media").concat($all(".result-art"));
-  }
-  lightRitual(collectLitTargets());
+  lightRitual($all(".pcard-media").concat($all(".result-art")));
 
-  /* Re-rendered commerce surfaces (quiz result) join the ritual late */
   var stageHost = $("#stage");
   if(stageHost && typeof MutationObserver !== "undefined"){
     new MutationObserver(function(){
@@ -106,8 +88,6 @@
     }).observe(stageHost, { childList:true, subtree:true });
   }
 
-  /* PDP gallery: the hero object lights shortly after arrival, and
-     re-lights gracefully whenever the gallery re-renders. */
   var pdpArt = $("#pdpArt");
   if(pdpArt){
     lightRitual([pdpArt], { threshold:0.25, baseDelay:420 });
@@ -120,13 +100,8 @@
     }
   }
 
-  /* --- Editorial statements unfold one line at a time -------------- */
   var lineIO = typeof IntersectionObserver !== "undefined"
-    ? new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-          if(e.isIntersecting){ e.target.classList.add("vr-lines-in"); lineIO.unobserve(e.target); }
-        });
-      }, { threshold:0.5 })
+    ? new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("vr-lines-in"); lineIO.unobserve(e.target); } }); }, { threshold:0.5 })
     : null;
   function unfoldLines(node){
     if(node.dataset.vrLines) return;
@@ -147,63 +122,44 @@
     if(lineIO) lineIO.observe(node); else node.classList.add("vr-lines-in");
   }
 
-  /* --- Page choreography ------------------------------------------- */
   var page = doc.body.dataset.page || "info";
-
   if(page === "home"){
     var heroMedia = $(".hero-media");
-    if(heroMedia){
-      driftWrap(heroMedia, { dur:58, dx:1.4, dy:-0.7, from:"1.02" });
-      atmo(heroMedia, "dawn");
-    }
+    if(heroMedia) atmo(heroMedia, "dawn");
     var houseLede = $(".intro-grid .lede");
     if(houseLede) unfoldLines(houseLede);
-
     var stage = $(".ls-stage");
     if(stage){
       drift(stage, { dur:52, dx:1.1, dy:-0.5, from:"1.01" });
       atmo(stage, "kurinji");
       var switcher = $("#landSwitcher");
-      if(switcher){
-        switcher.addEventListener("click", function(e){
-          var b = e.target.closest("[data-land]");
-          if(!b) return;
-          var oldA = $(".vr-atmo", stage);
-          if(oldA) oldA.className = "vr-atmo vr-atmo--" + b.dataset.land;
-        });
-      }
+      if(switcher) switcher.addEventListener("click", function(e){
+        var b = e.target.closest("[data-land]");
+        if(!b) return;
+        var oldA = $(".vr-atmo", stage);
+        if(oldA) oldA.className = "vr-atmo vr-atmo--" + b.dataset.land;
+      });
     }
     var wb = $(".world-banner .wb-link");
     if(wb){ drift($("picture", wb), { dur:60, dx:1.2, dy:-0.5, from:"1.02" }); atmo(wb, "dusk"); }
-    /* The craft band stays deliberately quiet — stillness between movements. */
   }
-
   if(page === "collection"){
     $all(".stack > section").forEach(function(sec, i){
       var kind = sec.dataset.land || "kurinji";
       var bg = $(".panel-bg", sec);
-      if(bg){
-        drift($("picture", bg), { dur:54 + i*6, dx:(i%2 ? -1.2 : 1.3), dy:-0.6, from:"1.03" });
-        atmo(bg, kind);
-      }
+      if(bg){ drift($("picture", bg), { dur:54 + i*6, dx:(i%2 ? -1.2 : 1.3), dy:-0.6, from:"1.03" }); atmo(bg, kind); }
     });
     var aintLede = $(".ainth-intro .lede");
     if(aintLede) unfoldLines(aintLede);
   }
-
   if(page === "landscape"){
     var params = new URLSearchParams(location.search);
     var kind = params.get("id");
     if(!VIRAI.landscapes[kind]) kind = "kurinji";
     var lh = $("#lhMedia");
-    if(lh){
-      driftWrap(lh, { dur:56, dx:1.3, dy:-0.6, from:"1.03" });
-      atmo(lh, kind);
-    }
+    if(lh){ driftWrap(lh, { dur:56, dx:1.3, dy:-0.6, from:"1.03" }); atmo(lh, kind); }
   }
 
-  /* --- Leaving through a landscape: the veil takes the destination's air
-         just before main.js navigates (capture phase runs first). --- */
   doc.addEventListener("click", function(e){
     if(e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     var a = e.target.closest("a[href]");
@@ -211,12 +167,51 @@
     var href = a.getAttribute("href") || "";
     var m = href.match(/^landscape\.html\?id=([a-z]+)/);
     var L = m && VIRAI.landscapes[m[1]];
-    if(L){
-      window.viraiVeilTone("linear-gradient(168deg," + L.tint + " 0%," + L.tone + "26 58%,#F5F1E8 100%)");
-    } else if(href.indexOf("ainthinai.html") === 0){
-      window.viraiVeilTone("linear-gradient(170deg,#EFEBE1 0%,#E7E1D5 55%,#F5F1E8 100%)");
-    } else {
-      window.viraiVeilTone("");
-    }
+    if(L) window.viraiVeilTone("linear-gradient(168deg," + L.tint + " 0%," + L.tone + "26 58%,#F5F1E8 100%)");
+    else if(href.indexOf("ainthinai.html") === 0) window.viraiVeilTone("linear-gradient(170deg,#EFEBE1 0%,#E7E1D5 55%,#F5F1E8 100%)");
+    else window.viraiVeilTone("");
   }, true);
+
+  /* --- HOME HERO SCROLL PARALLAX ---------------------------------- */
+  if(page === "home"){
+    var hero = $(".hero");
+    var heroImg = $("#heroImg");
+    var heroContent = $(".hero-content");
+    var heroAtmo = $(".hero-media .vr-atmo");
+    if(hero && heroImg && heroContent){
+      hero.classList.add("vr-home-parallax");
+      heroImg.style.willChange = "transform";
+      heroContent.style.willChange = "transform,opacity";
+      if(heroAtmo) heroAtmo.style.willChange = "transform";
+      var ticking = false;
+      var raf = 0;
+      function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+      function render(){
+        ticking = false;
+        var rect = hero.getBoundingClientRect();
+        var h = Math.max(hero.offsetHeight || window.innerHeight,1);
+        var p = clamp(-rect.top / h,0,1);
+        var mobile = window.innerWidth < 881;
+        var imageY = p * (mobile ? 4.8 : 7.5);
+        var scale = 1.08 + p * (mobile ? 0.018 : 0.028);
+        var copyY = p * (mobile ? -1.2 : -2.2);
+        var opacity = 1 - Math.max(0,p - 0.5) * 1.35;
+        var atmoY = p * (mobile ? 8 : 12);
+        heroImg.style.transform = "translate3d(0,"+imageY.toFixed(3)+"vh,0) scale("+scale.toFixed(4)+")";
+        heroContent.style.transform = "translate3d(0,"+copyY.toFixed(3)+"vh,0)";
+        heroContent.style.opacity = clamp(opacity,0,1).toFixed(3);
+        if(heroAtmo) heroAtmo.style.transform = "translate3d(0,"+atmoY.toFixed(3)+"vh,0)";
+      }
+      function request(){ if(ticking) return; ticking = true; raf = window.requestAnimationFrame(render); }
+      window.addEventListener("scroll",request,{passive:true});
+      window.addEventListener("resize",request,{passive:true});
+      window.addEventListener("orientationchange",request,{passive:true});
+      window.addEventListener("load",request,{once:true});
+      request();
+      document.addEventListener("visibilitychange",function(){
+        if(document.hidden && raf){ window.cancelAnimationFrame(raf); raf=0; ticking=false; }
+        else if(!document.hidden) request();
+      });
+    }
+  }
 })();

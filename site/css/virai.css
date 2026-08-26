@@ -12,24 +12,77 @@
 .world-banner + .craft-band .center > :first-child{margin-top:0 !important}
 
 /* ============================================================
-   VIRAI — HOME HERO CLOUD PARALLAX
-   The landscape photograph is the grounded layer. Clouds are a
-   separate transparent SVG layer and are the ONLY hero visual
-   layer moved by scroll. Text/content never participates in the
-   parallax calculation.
+   VIRAI — LAYERED KURINJI HERO
+   Each transparent layer is positioned as a true depth plane.
+   The base sky establishes the scene; closer layers travel more
+   on scroll to create a restrained 2.5D depth illusion.
    ============================================================ */
-.hero-media{isolation:isolate;overflow:hidden}
-.hero-media .hero-scrim{z-index:3}
-.hero-media .vr-home-clouds{position:absolute;inset:-8% -14%;z-index:2;display:block !important;pointer-events:none;background-image:url("../img/hero-clouds.svg");background-repeat:no-repeat;background-position:center top;background-size:cover;opacity:.62;transform:translate3d(0,0,0) scale(1.04);transform-origin:center center;will-change:transform;contain:paint}
-.hero-media .vr-atmo{z-index:2}.hero-media .hero-img{position:relative;z-index:0}
-@media (max-width:880px){.hero-media .vr-home-clouds{inset:-7% -10%;opacity:.52;background-position:center top;transform:translate3d(0,0,0) scale(1.035)}}
-@media (prefers-reduced-motion:reduce){.hero-media .vr-home-clouds{transform:none !important}}
+.hero.hero-layered{
+  position:relative;
+  min-height:clamp(720px,100svh,1080px);
+  overflow:hidden;
+  isolation:isolate;
+  background:#231f42;
+}
+.hero-layer-scene{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:0;
+  background:#231f42;
+}
+.hero-layer{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:112%;
+  height:112%;
+  max-width:none;
+  display:block;
+  object-fit:cover;
+  object-position:center center;
+  transform:translate3d(-50%,-50%,0);
+  transform-origin:center center;
+  pointer-events:none;
+  user-select:none;
+  will-change:transform;
+}
+.hero-layer-sky{z-index:1;width:116%;height:116%}
+.hero-layer-clouds{z-index:2;width:124%;height:124%}
+.hero-layer-mountains-far{z-index:3;width:118%;height:118%}
+.hero-layer-mist{z-index:4;width:121%;height:121%}
+.hero-layer-mountains-mid{z-index:5;width:120%;height:120%}
+.hero-layer-mountains-near{z-index:6;width:123%;height:123%}
+.hero-layer-foreground{z-index:7;width:128%;height:128%}
+.hero-layer-scene::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:10;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(18,16,15,.02) 34%,rgba(18,16,15,.20) 58%,rgba(18,16,15,.52) 100%),linear-gradient(90deg,rgba(18,16,15,.28) 0%,rgba(18,16,15,0) 58%);
+}
+.hero-layered .hero-scrim{z-index:11;pointer-events:none;background:linear-gradient(180deg,rgba(24,21,17,0) 42%,rgba(24,21,17,.18) 72%,rgba(24,21,17,.42) 100%),linear-gradient(90deg,rgba(24,21,17,.15) 0%,rgba(24,21,17,0) 58%)}
+.hero-layered .hero-content{z-index:20}
+.hero-layered .hero-glow{z-index:18}
+
+/* Scroll speed is driven by experience.js; the base layer barely moves. */
+@media (max-width:880px){
+  .hero.hero-layered{min-height:86svh}
+  .hero-layer{width:122%;height:118%}
+  .hero-layer-sky{width:126%;height:122%}
+  .hero-layer-clouds{width:136%;height:130%}
+  .hero-layer-mountains-far{width:128%;height:124%}
+  .hero-layer-mist{width:132%;height:126%}
+  .hero-layer-mountains-mid{width:134%;height:128%}
+  .hero-layer-mountains-near{width:136%;height:130%}
+  .hero-layer-foreground{width:142%;height:134%}
+  .hero-layer-scene::after{background:linear-gradient(180deg,rgba(18,16,15,0) 34%,rgba(18,16,15,.12) 58%,rgba(18,16,15,.42) 100%),linear-gradient(90deg,rgba(18,16,15,.18) 0%,rgba(18,16,15,0) 60%)}
+}
 
 /* ============================================================
    VIRAI — SCROLL-LIT KURINJI SCENE
-   Two matched states crossfade as the user scrolls through the
-   section. The candle remains unlit at the start and becomes lit
-   progressively; the original scene composition never moves.
    ============================================================ */
 .virai-candle-scene{position:relative;overflow:hidden}
 .virai-candle-scene .scene-media{position:relative;min-height:clamp(520px,72vh,820px);overflow:hidden;background:var(--smoke)}

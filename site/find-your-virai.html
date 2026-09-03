@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find Your Virai | VIRAI</title>
+<meta name="description" content="Three quiet questions. One considered fragrance recommendation — with the reasoning shown. Find the landscape of Ainthinai that matches your feeling.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+</head>
+<body data-page="quiz">
+<a class="skip" href="#main">Skip to content</a>
+<div class="proto" id="proto" role="note">Prototype build — product data, pricing &amp; policies are placeholders pending functional sign-off<button type="button" aria-label="Dismiss notice">&times;</button></div>
+<div class="top-announce">
+  <div class="wrap head-util">
+    <span>Complimentary standard shipping over ₹3,000</span>
+    <nav class="util-links" aria-label="Support"><a href="contact.html">Contact</a><a href="faq.html">FAQs</a><a href="shipping.html">Shipping &amp; Returns</a></nav>
+  </div>
+</div>
+<header class="site-head">
+  <div class="wrap head-main">
+    <button class="burger" aria-expanded="false" aria-label="Open menu" aria-controls="mmenu"><span></span><span></span><span></span></button>
+    <nav class="head-nav head-left" aria-label="Primary">
+      <div class="has-sub">
+        <a href="shop.html">Shop</a>
+        <div class="sub"><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Gift Sets</a><a href="shop.html?family=floral">By Fragrance</a></div>
+      </div>
+      <div class="has-sub">
+        <a href="ainthinai.html">Ainthinai</a>
+        <div class="sub"><a href="ainthinai.html">Collection 01 — Overview</a><a href="landscape.html?id=kurinji">Kurinji · Union</a><a href="landscape.html?id=mullai">Mullai · Waiting</a><a href="landscape.html?id=marutham">Marutham · Playful Conflict</a><a href="landscape.html?id=neithal">Neithal · Longing</a><a href="landscape.html?id=palai">Palai · Separation</a></div>
+      </div>
+      <div class="has-sub">
+        <a href="gift.html">Gift</a>
+        <div class="sub"><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
+      </div>
+    </nav>
+    <a class="brand-mark" href="index.html" aria-label="Virai - home"><img class="logo-img" src="img/virai-logo.webp" alt="Virai"></a>
+    <nav class="head-nav head-right" aria-label="Secondary">
+      <div class="has-sub">
+        <a href="story.html">Discover</a>
+        <div class="sub"><a href="story.html">Our Story</a><a href="fragrance-memory.html">Fragrance &amp; Memory</a><a href="craft.html">Craft &amp; Materials</a></div>
+      </div>
+      <a class="icon-btn" href="search.html">Search</a>
+      <button class="icon-btn" data-open-bag>Bag <span class="bag-count">0</span></button>
+    </nav>
+    <button class="icon-btn m-bag" data-open-bag aria-label="Open bag">Bag <span class="bag-count">0</span></button>
+  </div>
+</header>
+<div class="mobile-menu" id="mmenu" aria-label="Menu">
+  <button class="mm-close" aria-label="Close menu">&times;</button>
+  <div class="mm-group"><h5>Shop</h5><a href="shop.html">All Products</a><a href="shop.html?family=floral">By Fragrance</a><a href="shop.html?type=Set">Gift Sets</a></div>
+  <div class="mm-group"><h5>Ainthinai — Collection 01</h5><a href="ainthinai.html">The Five Landscapes</a><a href="landscape.html?id=kurinji">Kurinji · Union</a><a href="landscape.html?id=mullai">Mullai · Waiting</a><a href="landscape.html?id=marutham">Marutham · Playful Conflict</a><a href="landscape.html?id=neithal">Neithal · Longing</a><a href="landscape.html?id=palai">Palai · Separation</a></div>
+  <div class="mm-group"><h5>Gift</h5><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
+  <div class="mm-group"><h5>Discover</h5><a href="story.html">Our Story</a><a href="fragrance-memory.html">Fragrance &amp; Memory</a><a href="craft.html">Craft &amp; Materials</a></div>
+  <div class="mm-cta"><a class="btn btn-solid" href="shop.html">Shop Fragrance</a><a class="btn btn-line" href="find-your-virai.html">Find a Gift</a></div>
+</div>
+
+<main id="main">
+  <section class="quiz-shell">
+    <p class="kicker center" style="display:block">Find Your Virai — three quiet questions</p>
+    <h1 class="center" style="font-size:clamp(2rem,4vw,3rem)">Which landscape holds your feeling?</h1>
+    <div class="quiz-progress" aria-hidden="true"><i id="p1"></i><i id="p2"></i><i id="p3"></i></div>
+    <div id="stage" aria-live="polite"></div>
+    <div class="quiz-nav">
+      <button class="link-u" id="backBtn" hidden style="border:none;border-bottom:1px solid var(--ink)">Back</button>
+      <button class="link-u" id="restartBtn" hidden style="border:none;color:var(--mineral)">Start again</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div class="foot-news">
+      <h3>Letters that linger</h3>
+      <p>Occasional notes on fragrance, craft and the five landscapes. No noise.</p>
+      <form data-form="newsletter" novalidate>
+        <input type="email" required placeholder="Email address" aria-label="Email address">
+        <button class="btn btn-line" type="submit" style="border-color:#57503F;color:var(--smoke)">Subscribe</button>
+      </form>
+    </div>
+    <div class="foot-col"><h4>Shop</h4><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Sets</a><a href="product.html?id=discovery-set">Discovery Set</a></div>
+    <div class="foot-col"><h4>Ainthinai</h4><a href="ainthinai.html">Collection 01</a><a href="landscape.html?id=kurinji">Kurinji</a><a href="landscape.html?id=mullai">Mullai</a><a href="landscape.html?id=marutham">Marutham</a><a href="landscape.html?id=neithal">Neithal</a><a href="landscape.html?id=palai">Palai</a></div>
+    <div class="foot-col"><h4>Gift</h4><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
+    <div class="foot-col"><h4>Care</h4><a href="contact.html">Contact</a><a href="faq.html">FAQs</a><a href="shipping.html">Shipping</a><a href="returns.html">Returns</a><a href="care.html">Product Care</a></div>
+  </div>
+  <div class="wrap foot-base">
+    <span>&copy; <span id="yr"></span> Virai — Luxury Gifting, Rooted in Fragrance</span>
+    <span class="foot-brand tamil">விரை — Lingering Impressions</span>
+  </div>
+</footer>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/quiz.js"></script>
+</body>
+</html>

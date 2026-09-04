@@ -57,8 +57,17 @@
       <aside class="summary" aria-label="Order summary">
         <h2 style="font-size:1.15rem;margin-bottom:.4rem">Your order</h2>
         <div id="sumLines"></div>
+        <div class="coupon-box" style="margin:1.4rem 0 1rem;padding-top:1.2rem;border-top:1px solid var(--line-soft,#e5e5e0)">
+          <label for="couponInput" class="f-label" style="display:block;margin-bottom:.4rem;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase">Promo / Gift Code</label>
+          <div style="display:flex;gap:.5rem">
+            <input type="text" id="couponInput" placeholder="e.g. WELCOME10" style="flex:1;text-transform:uppercase;letter-spacing:.05em" autocomplete="off" autocorrect="off" autocapitalize="characters">
+            <button type="button" id="btnApplyCoupon" class="btn btn-line" style="padding:.6rem 1.1rem;font-size:.84rem;white-space:nowrap">Apply</button>
+          </div>
+          <div id="couponFeedback" style="margin-top:.4rem;font-size:.82rem;display:none"></div>
+        </div>
         <div class="sum-totals">
           <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span id="tSub"></span></div>
+          <div id="rowDiscount" style="display:none;justify-content:space-between;color:var(--kurinji-dark,#3a4b73)"><span>Discount (<span id="tCouponLabel"></span>)</span><span id="tDiscount"></span></div>
           <div style="display:flex;justify-content:space-between"><span id="tShipLabel">Standard delivery</span><span id="tShip"></span></div>
           <div class="grand"><span>Total</span><span id="tGrand"></span></div>
           <p class="small muted" style="margin-top:.4rem">GST included · Gift wrap charges (₹150 per object) included above</p>

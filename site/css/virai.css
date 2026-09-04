@@ -317,41 +317,239 @@ h3{font-size:clamp(1.25rem,2vw,1.6rem)}
   background-repeat:no-repeat;background-position:right center;
 }
 /* Custom VIRAI dropdown (progressive enhancement over native <select>) */
-.vr-sel{position:relative;display:inline-block;vertical-align:middle}
-.vr-sel select.filter-select{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;clip:rect(0 0 0 0)}
-.vr-sel-btn{
-  display:inline-flex;align-items:center;gap:.9rem;cursor:pointer;
-  font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
-  padding:.5rem .2rem;border:none;border-bottom:1px solid var(--line);background:transparent;
-  transition:border-color .3s,color .3s;white-space:nowrap;
+.vr-sel{position:relative;vertical-align:middle}
+.vr-sel.vr-sel-inline{display:inline-block}
+.vr-sel.vr-sel-field{display:block;width:100%}
+
+/* Hide native select while preserving full form and accessibility semantics */
+.vr-sel select{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip:rect(0 0 0 0) !important;
+  white-space:nowrap !important;
+  border:0 !important;
+  opacity:0 !important;
+  pointer-events:none !important;
 }
-.vr-sel-btn:hover{border-color:var(--ink)}
-.vr-sel-btn .vr-sel-caret{
-  width:10px;height:6px;flex:none;margin-left:auto;transition:transform .3s var(--ease)
+
+/* Form field trigger button (contact, corporate, weddings, etc.) */
+.vr-sel-field .vr-sel-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:2px;
+  padding:.85rem 1.05rem;
+  font-size:.92rem;
+  font-family:inherit;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  outline:none;
+  transition:border-color .25s var(--ease),box-shadow .25s var(--ease),background .25s;
 }
-.vr-sel.open .vr-sel-btn{border-color:var(--ink)}
-.vr-sel.open .vr-sel-caret{transform:rotate(180deg)}
+.vr-sel-field .vr-sel-btn:hover{
+  border-color:var(--ink-soft);
+}
+.vr-sel-field.open .vr-sel-btn,
+.vr-sel-field .vr-sel-btn:focus-visible{
+  border-color:var(--ink);
+  box-shadow:0 0 0 1px var(--ink);
+}
+.vr-sel-field .vr-sel-btn.invalid{
+  border-color:#A2593B !important;
+  box-shadow:0 0 0 1px #A2593B !important;
+}
+
+/* Label text & placeholder styling */
+.vr-sel-label{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--ink);
+  transition:color .2s;
+}
+.vr-sel-field .vr-sel-label{
+  letter-spacing:.01em;
+  font-weight:400;
+}
+.vr-sel-field .vr-sel-label.is-placeholder{
+  color:var(--mineral);
+  font-weight:300;
+}
+
+/* Inline filter button (shop page) */
+.vr-sel-inline .vr-sel-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.9rem;
+  cursor:pointer;
+  font-size:.72rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--ink);
+  padding:.5rem .2rem;
+  border:none;
+  border-bottom:1px solid var(--line);
+  background:transparent;
+  transition:border-color .3s,color .3s;
+  white-space:nowrap;
+  outline:none;
+}
+.vr-sel-inline .vr-sel-btn:hover{border-color:var(--ink)}
+.vr-sel-inline.open .vr-sel-btn,
+.vr-sel-inline .vr-sel-btn:focus-visible{border-color:var(--ink)}
+
+/* Custom Virai Chevron Icon */
+.vr-sel-caret{
+  width:10px;
+  height:6px;
+  flex:none;
+  margin-left:auto;
+  color:var(--ink-soft);
+  transition:transform .28s var(--ease),color .2s;
+}
+.vr-sel:hover .vr-sel-caret{color:var(--ink)}
+.vr-sel.open .vr-sel-caret{
+  transform:rotate(180deg);
+  color:var(--ink);
+}
+
+/* Dropdown Menu Panel */
 .vr-sel-panel{
-  position:absolute;top:calc(100% + .55rem);left:0;z-index:60;min-width:100%;
-  background:var(--paper);border:1px solid var(--line);border-radius:3px;
-  box-shadow:0 18px 44px -22px rgba(35,32,27,.4);padding:.35rem;
-  opacity:0;transform:translateY(-6px);pointer-events:none;
-  transition:opacity .28s var(--ease),transform .28s var(--ease);
+  position:absolute;
+  top:calc(100% + 5px);
+  left:0;
+  z-index:120;
+  min-width:100%;
+  max-height:280px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:2px;
+  box-shadow:0 18px 40px -12px rgba(35,32,27,.22),0 4px 14px -2px rgba(35,32,27,.08);
+  padding:.35rem;
+  opacity:0;
+  transform:translateY(-6px);
+  pointer-events:none;
+  transition:opacity .22s var(--ease),transform .22s var(--ease);
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
 }
-.vr-sel.open .vr-sel-panel{opacity:1;transform:translateY(0);pointer-events:auto}
+.vr-sel-panel::-webkit-scrollbar{width:5px}
+.vr-sel-panel::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.vr-sel-panel::-webkit-scrollbar-track{background:transparent}
+
+/* Flip upward if close to bottom of screen */
+.vr-sel-panel.panel-top{
+  top:auto;
+  bottom:calc(100% + 5px);
+  transform:translateY(6px);
+}
+.vr-sel.open .vr-sel-panel.panel-top{
+  transform:translateY(0);
+}
+.vr-sel.open .vr-sel-panel{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+/* Option Items */
 .vr-sel-opt{
-  display:flex;align-items:center;gap:.7rem;width:100%;cursor:pointer;
-  padding:.62rem .8rem;border-radius:2px;text-align:left;white-space:nowrap;
-  font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
-  transition:background .2s,color .2s;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.8rem;
+  width:100%;
+  cursor:pointer;
+  padding:.7rem .95rem;
+  border:none;
+  border-radius:2px;
+  background:transparent;
+  text-align:left;
+  color:var(--ink-soft);
+  font-family:inherit;
+  transition:background .18s var(--ease),color .18s,padding-left .18s;
+  outline:none;
 }
-.vr-sel-opt::before{
-  content:"";width:5px;height:5px;border-radius:999px;flex:none;
-  background:var(--ink);opacity:0;transform:scale(.4);transition:opacity .2s,transform .2s;
+.vr-sel-field .vr-sel-opt{
+  font-size:.92rem;
+  letter-spacing:.01em;
 }
-.vr-sel-opt:hover{background:var(--rice);color:var(--ink)}
-.vr-sel-opt[aria-selected="true"]{color:var(--ink)}
-.vr-sel-opt[aria-selected="true"]::before{opacity:1;transform:scale(1)}
+.vr-sel-inline .vr-sel-opt{
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:.62rem .8rem;
+}
+.vr-sel-opt-text{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  flex:1;
+  min-width:0;
+}
+
+/* Delicate Virai Pip / Dot */
+.vr-sel-opt-dot{
+  width:5px;
+  height:5px;
+  border-radius:999px;
+  background:var(--ink);
+  opacity:0;
+  transform:scale(.3);
+  transition:opacity .2s var(--ease),transform .2s var(--ease),background .2s;
+  flex-shrink:0;
+}
+
+/* Option States */
+.vr-sel-opt:hover,
+.vr-sel-opt.focused{
+  background:var(--rice);
+  color:var(--ink);
+  padding-left:1.1rem;
+}
+.vr-sel-opt:hover .vr-sel-opt-dot,
+.vr-sel-opt.focused .vr-sel-opt-dot{
+  opacity:.45;
+  transform:scale(.8);
+}
+.vr-sel-opt[aria-selected="true"]{
+  background:var(--rice);
+  color:var(--ink);
+  font-weight:500;
+}
+.vr-sel-opt[aria-selected="true"] .vr-sel-opt-dot{
+  opacity:1;
+  transform:scale(1);
+  background:var(--tone,var(--ink));
+}
+
+/* Subtle checkmark indicator on the right */
+.vr-sel-opt-check{
+  width:12px;
+  height:9px;
+  flex-shrink:0;
+  color:var(--tone,var(--ink));
+  opacity:0;
+  transform:scale(.6);
+  transition:opacity .2s var(--ease),transform .2s var(--ease);
+}
+.vr-sel-opt[aria-selected="true"] .vr-sel-opt-check{
+  opacity:1;
+  transform:scale(1);
+}
 .results-meta{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 0 2.2rem}
 .shop-layout{padding-bottom:clamp(4rem,8vw,7rem)}
 

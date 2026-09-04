@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>House Administration | VIRAI</title>
+<meta name="description" content="Virai House Administration — Secure management of products, authoritative pricing, and coupon codes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+<style>
+/* Custom Admin Styling aligned with Virai Design Language */
+.admin-shell { min-height: 100vh; background: var(--paper, #fbf8f2); color: var(--ink, #23201b); }
+.admin-topbar { background: var(--rice, #f5f1e8); border-bottom: 1px solid var(--line, #ddd5c6); padding: .85rem 0; }
+.admin-topbar-inner { display: flex; justify-content: space-between; align-items: center; }
+.admin-badge { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; padding: .25rem .65rem; border-radius: 999px; background: #e8ede3; color: #39522d; font-weight: 500; border: 1px solid #c2d6b7; }
+.admin-nav { display: flex; gap: .4rem; border-bottom: 1px solid var(--line, #ddd5c6); margin-top: 1.6rem; overflow-x: auto; scrollbar-width: none; }
+.admin-tab-btn { padding: .75rem 1.4rem; font-size: .9rem; border-bottom: 2px solid transparent; color: var(--ink-soft, #4a453d); cursor: pointer; white-space: nowrap; transition: all .15s ease; font-weight: 500; }
+.admin-tab-btn:hover { color: var(--ink, #23201b); }
+.admin-tab-btn.active { color: var(--ink, #23201b); border-color: var(--ink, #23201b); }
+.admin-card { background: var(--rice, #f5f1e8); border: 1px solid var(--line, #ddd5c6); padding: 1.6rem; margin-bottom: 1.6rem; }
+.admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+.stat-card { background: var(--rice, #f5f1e8); border: 1px solid var(--line, #ddd5c6); padding: 1.4rem 1.6rem; }
+.stat-val { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; line-height: 1.1; margin: .4rem 0 .2rem; color: var(--ink); }
+.stat-label { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--mineral, #8b8478); font-weight: 500; }
+.admin-table-wrap { overflow-x: auto; background: var(--rice, #f5f1e8); border: 1px solid var(--line, #ddd5c6); }
+.admin-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .88rem; }
+.admin-table th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line, #ddd5c6); background: rgba(0,0,0,.02); font-weight: 500; color: var(--ink-soft); font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; }
+.admin-table td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--line-soft, #e9e3d6); vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: rgba(255,255,255,.4); }
+.prod-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 3px; border: 1px solid var(--line); }
+.status-pill { display: inline-block; font-size: .72rem; padding: .2rem .55rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+.status-pill.in_stock { background: #e6ede6; color: #2e5932; }
+.status-pill.low_stock { background: #faede3; color: #8e4726; }
+.status-pill.out_of_stock { background: #ede6e6; color: #822e2e; }
+.status-pill.active { background: #e6ede6; color: #2e5932; }
+.status-pill.inactive { background: #eceae5; color: #736e65; }
+.btn-sm { padding: .42rem .85rem; font-size: .82rem; }
+.btn-danger { color: #a23b3b; border-color: #d8b4b4; }
+.btn-danger:hover { background: #a23b3b; color: #fff; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(35,32,27,.6); backdrop-filter: blur(3px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-box { background: var(--paper, #fbf8f2); border: 1px solid var(--line, #ddd5c6); max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2.2rem; position: relative; box-shadow: 0 16px 36px rgba(0,0,0,.15); }
+.modal-close { position: absolute; top: 1.2rem; right: 1.2rem; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--mineral); }
+.toast-notice { position: fixed; bottom: 2rem; right: 2rem; background: var(--ink, #23201b); color: var(--rice, #f5f1e8); padding: .85rem 1.4rem; z-index: 6000; font-size: .88rem; box-shadow: 0 8px 24px rgba(0,0,0,.2); display: flex; align-items: center; gap: .8rem; transform: translateY(100px); opacity: 0; transition: all .25s var(--ease); pointer-events: none; }
+.toast-notice.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.admin-input-group { margin-bottom: 1.2rem; }
+.admin-input-group label { display: block; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; color: var(--ink-soft); margin-bottom: .4rem; }
+.admin-input-group input, .admin-input-group select, .admin-input-group textarea { width: 100%; background: #fff; border: 1px solid var(--line); padding: .75rem 1rem; font-size: .92rem; border-radius: 2px; }
+.admin-input-group input:focus, .admin-input-group select:focus, .admin-input-group textarea:focus { outline: 2px solid var(--ink); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+</style>
+</head>
+<body class="admin-shell">
+
+<!-- TOP NOTIFICATION TOAST -->
+<div id="toast" class="toast-notice" role="alert" aria-live="polite">
+  <span id="toastMsg">Operation successful</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. SECURE LOGIN SCREEN (Visible when unauthenticated) -->
+<!-- ============================================================ -->
+<div id="loginView" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+  <div style="max-width:440px;width:100%;background:var(--rice);border:1px solid var(--line);padding:2.8rem 2.4rem;text-align:center">
+    <div style="margin-bottom:1.4rem">
+      <img src="img/virai-logo.webp" alt="Virai" style="height:36px;margin:0 auto">
+      <p class="tamil" style="font-size:1.1rem;color:var(--mullai);margin-top:.6rem">நிர்வாகம் · House Administration</p>
+    </div>
+    
+    <div id="loginErr" style="display:none;background:#fdeeee;border:1px solid #f2c7c7;color:#9b2c2c;padding:.75rem;font-size:.85rem;margin-bottom:1.4rem;text-align:left"></div>
+
+    <form id="loginForm" novalidate style="text-align:left">
+      <div class="admin-input-group">
+        <label for="loginUser">Administrator Username</label>
+        <input type="text" id="loginUser" value="admin" required autocomplete="username">
+      </div>
+      <div class="admin-input-group">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Enter administrator password">
+      </div>
+      <button type="submit" class="btn btn-solid" style="width:100%;padding:1rem;margin-top:.6rem">Enter Administration Portal</button>
+    </form>
+
+    <div style="margin-top:2rem;padding-top:1.4rem;border-top:1px solid var(--line-soft);font-size:.8rem;color:var(--mineral);line-height:1.6">
+      <p>Protected by <strong>PBKDF2 SHA-512</strong> password hashing, constant-time verification, and automatic rate-limiting defense.</p>
+      <p style="margin-top:.6rem"><a class="link-u" href="index.html">&larr; Return to Virai Storefront</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. AUTHENTICATED ADMIN DASHBOARD -->
+<!-- ============================================================ -->
+<div id="dashboardView" style="display:none">
+  <header class="admin-topbar">
+    <div class="wrap admin-topbar-inner">
+      <div style="display:flex;align-items:center;gap:1.2rem">
+        <a href="index.html" title="Virai Storefront"><img src="img/virai-logo.webp" alt="Virai" style="height:26px"></a>
+        <span style="border-left:1px solid var(--line);padding-left:1rem;font-size:.85rem;font-weight:500;color:var(--ink-soft)">Digital House Administration</span>
+        <span class="admin-badge">Authoritative Security Active</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.2rem">
+        <span class="small" style="color:var(--ink-soft)">Signed in as <strong id="adminUserLabel">admin</strong></span>
+        <a href="index.html" target="_blank" class="btn btn-line btn-sm" style="background:#fff">View Storefront &#8599;</a>
+        <button type="button" id="btnLogout" class="btn btn-line btn-sm" style="border-color:#d4cfc5">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding:2.4rem 0 5rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:.5rem">
+      <div>
+        <p class="kicker">House Management &amp; Pricing Governance</p>
+        <h1 style="font-size:2.2rem">Commerce &amp; Catalogue Governance</h1>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="admin-nav" role="tablist">
+      <button class="admin-tab-btn active" data-tab="overview">Overview</button>
+      <button class="admin-tab-btn" data-tab="products">Products &amp; Pricing</button>
+      <button class="admin-tab-btn" data-tab="coupons">Coupon Code Engine</button>
+      <button class="admin-tab-btn" data-tab="orders">Customer Orders Log</button>
+      <button class="admin-tab-btn" data-tab="settings">Store Settings &amp; Security</button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="admin-tab-panel" style="margin-top:2rem">
+      <div class="admin-stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Active Products</span>
+          <div class="stat-val" id="statProducts">0</div>
+          <span class="small">In live catalogue</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Active Coupons</span>
+          <div class="stat-val" id="statCoupons">0</div>
+          <span class="small">Verified promo rules</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Orders Logged</span>
+          <div class="stat-val" id="statOrders">0</div>
+          <span class="small">Tamper-proof records</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Gross Revenue</span>
+          <div class="stat-val" id="statRevenue">₹0</div>
+          <span class="small">Verified server calculations</span>
+        </div>
+      </div>
+
+      <div class="admin-card" style="background:#f4f0e6">
+        <h3 style="font-size:1.15rem;margin-bottom:.6rem">&#128737; Server-Authoritative Price &amp; Coupon Architecture</h3>
+        <p style="font-size:.9rem;color:var(--ink-soft);max-width:80ch;line-height:1.6">
+          The Virai checkout calculates all product prices, line items, gift-wrap packaging fees, coupon discounts, and shipping bands strictly on the server. Client-side attempts to modify prices via DOM injection or forged payloads are rejected; calculations and orders use only the authoritative parameters managed below.
+        </p>
+      </div>
+
+      <h3 style="font-size:1.25rem;margin:2rem 0 1rem">Recent Confirmed Orders</h3>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Coupon</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrdersBody">
+            <tr><td colspan="7" class="center muted" style="padding:2rem">No orders placed yet. Test checkout to see entries appear here.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: PRODUCTS & PRICING -->
+    <section id="tab-products" class="admin-tab-panel" style="display:none;margin-top:2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;gap:1rem;flex-wrap:wrap">
+        <div style="display:flex;gap:.8rem;align-items:center;flex:1;max-width:500px">
+          <input type="search" id="prodSearch" placeholder="Search by name, landscape, or ID..." style="background:#fff;border:1px solid var(--line);padding:.6rem .9rem;font-size:.88rem;width:100%">
+        </div>
+        <button type="button" id="btnOpenAddProd" class="btn btn-solid btn-sm">+ Add New Product</button>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Object</th>
+              <th>Name &amp; Format</th>
+              <th>Landscape</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Featured</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+            <!-- Dynamic product rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: COUPONS ENGINE -->
+    <section id="tab-coupons" class="admin-tab-panel" style="display:none;margin-top:2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem">
+        <div>
+          <h2 style="font-size:1.4rem">Discount &amp; Promotional Codes</h2>
+          <p class="small" style="margin-top:.2rem">All discounts are validated on the server with minimum spend and expiration rules.</p>
+        </div>
+        <button type="button" id="btnOpenAddCoupon" class="btn btn-solid btn-sm">+ Create New Coupon</button>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Type &amp; Value</th>
+              <th>Min. Order</th>
+              <th>Max Cap</th>
+              <th>Times Used</th>
+              <th>Validity</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="couponsTableBody">
+            <!-- Dynamic coupon rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: ORDERS LOG -->
+    <section id="tab-orders" class="admin-tab-panel" style="display:none;margin-top:2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem">
+        <div>
+          <h2 style="font-size:1.4rem">Customer Orders &amp; Audit Trail</h2>
+          <p class="small" style="margin-top:.2rem">Every transaction calculated and verified server-side.</p>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Delivery Address</th>
+              <th>Verified Items</th>
+              <th>Coupon</th>
+              <th>Verified Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- Dynamic order rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: STORE SETTINGS & SECURITY -->
+    <section id="tab-settings" class="admin-tab-panel" style="display:none;margin-top:2rem">
+      <div class="admin-card" style="max-width:680px">
+        <h3 style="font-size:1.25rem;margin-bottom:.4rem">Delivery &amp; Shipping Governance</h3>
+        <p class="small" style="margin-bottom:1.4rem">Set nationwide shipping rates and free shipping threshold.</p>
+
+        <form id="shippingSettingsForm" novalidate>
+          <div class="admin-input-group">
+            <label for="setFreeThreshold">Free Delivery Threshold (₹)</label>
+            <input type="number" id="setFreeThreshold" required min="0" step="50">
+            <span class="small" style="display:block;margin-top:.3rem">Orders at or above this amount qualify for complimentary standard delivery.</span>
+          </div>
+          <div class="form-grid-2">
+            <div class="admin-input-group">
+              <label for="setStdShip">Standard Delivery Fee (₹)</label>
+              <input type="number" id="setStdShip" required min="0" step="10">
+            </div>
+            <div class="admin-input-group">
+              <label for="setExpShip">Express Delivery Fee (₹)</label>
+              <input type="number" id="setExpShip" required min="0" step="10">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-solid btn-sm" style="margin-top:.6rem">Update Shipping Settings</button>
+        </form>
+      </div>
+
+      <div class="admin-card" style="max-width:680px;margin-top:2rem">
+        <h3 style="font-size:1.25rem;margin-bottom:.4rem">Administrator Security Credentials</h3>
+        <p class="small" style="margin-bottom:1.4rem">Update password. Credentials use PBKDF2 with 100,000 iterations.</p>
+
+        <form id="changePasswordForm" novalidate>
+          <div class="admin-input-group">
+            <label for="curPass">Current Password</label>
+            <input type="password" id="curPass" required autocomplete="current-password">
+          </div>
+          <div class="form-grid-2">
+            <div class="admin-input-group">
+              <label for="newPass">New Password</label>
+              <input type="password" id="newPass" required minlength="8" autocomplete="new-password">
+            </div>
+            <div class="admin-input-group">
+              <label for="confirmPass">Confirm New Password</label>
+              <input type="password" id="confirmPass" required minlength="8" autocomplete="new-password">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-solid btn-sm" style="margin-top:.6rem">Change Administrator Password</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: QUICK EDIT PRICE -->
+<!-- ============================================================ -->
+<div id="modalEditPrice" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editPriceTitle">
+  <div class="modal-box" style="max-width:440px">
+    <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    <h3 id="editPriceTitle" style="font-size:1.3rem;margin-bottom:.4rem">Change Price</h3>
+    <p id="editPriceSub" class="small" style="margin-bottom:1.4rem"></p>
+
+    <form id="quickPriceForm">
+      <input type="hidden" id="editPriceProdId">
+      <div class="admin-input-group">
+        <label for="newPriceInput">New Price (INR ₹)</label>
+        <input type="number" id="newPriceInput" required min="1" step="10" autofocus>
+      </div>
+      <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.4rem">
+        <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+        <button type="submit" class="btn btn-solid btn-sm">Save Price</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD / EDIT PRODUCT -->
+<!-- ============================================================ -->
+<div id="modalProduct" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="prodModalTitle">
+  <div class="modal-box">
+    <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    <h3 id="prodModalTitle" style="font-size:1.35rem;margin-bottom:.4rem">Add New Product</h3>
+    <p class="small" style="margin-bottom:1.4rem">Once added, the product immediately appears in the live storefront.</p>
+
+    <form id="productForm">
+      <input type="hidden" id="prodEditMode" value="create">
+      <input type="hidden" id="prodEditId" value="">
+
+      <div class="admin-input-group">
+        <label for="prodName">Product Name *</label>
+        <input type="text" id="prodName" required placeholder="e.g. Kurinji · Mountain Mist Candle">
+      </div>
+
+      <div class="admin-input-group">
+        <label for="prodSub">Subtitle / Olfactory Highlight *</label>
+        <input type="text" id="prodSub" required placeholder="e.g. Wild blue florals over cool forest honey">
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="prodPrice">Price (₹) *</label>
+          <input type="number" id="prodPrice" required min="1" step="10" placeholder="2850">
+        </div>
+        <div class="admin-input-group">
+          <label for="prodLandscape">Landscape</label>
+          <select id="prodLandscape">
+            <option value="kurinji">Kurinji (Mountains / Union)</option>
+            <option value="mullai">Mullai (Forest / Waiting)</option>
+            <option value="marutham">Marutham (River / Conflict)</option>
+            <option value="neithal">Neithal (Coast / Longing)</option>
+            <option value="palai">Palai (Desert / Separation)</option>
+            <option value="">None / Universal Set</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="prodType">Format</label>
+          <select id="prodType">
+            <option value="Candle">Full-size Candle (240 g)</option>
+            <option value="Travel Candle">Travel Candle (90 g)</option>
+            <option value="Set">Curated Set / Gift Box</option>
+          </select>
+        </div>
+        <div class="admin-input-group">
+          <label for="prodStock">Stock Status</label>
+          <select id="prodStock">
+            <option value="in_stock">In Stock</option>
+            <option value="low_stock">Low Stock</option>
+            <option value="out_of_stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="prodSize">Size / Volume</label>
+          <input type="text" id="prodSize" placeholder="e.g. 240 g">
+        </div>
+        <div class="admin-input-group">
+          <label for="prodBurn">Burn Time</label>
+          <input type="text" id="prodBurn" placeholder="e.g. ≈ 50 hours">
+        </div>
+      </div>
+
+      <div class="admin-input-group">
+        <label for="prodImageSelect">Product Studio Photography</label>
+        <select id="prodImageSelect">
+          <option value="1">Image Set 1 (Kurinji Candle)</option>
+          <option value="2">Image Set 2 (Mullai Candle)</option>
+          <option value="3">Image Set 3 (Marutham Candle)</option>
+          <option value="4">Image Set 4 (Neithal Candle)</option>
+          <option value="5">Image Set 5 (Palai Candle)</option>
+          <option value="6">Image Set 6 (Kurinji Travel)</option>
+          <option value="7">Image Set 7 (Mullai Travel)</option>
+          <option value="8">Image Set 8 (Neithal Travel)</option>
+          <option value="9">Image Set 9 (Discovery Set)</option>
+          <option value="10">Image Set 10 (Complete Collection)</option>
+        </select>
+      </div>
+
+      <div class="admin-input-group">
+        <label for="prodStory">Poetic Story / Intention</label>
+        <textarea id="prodStory" rows="2" placeholder="For beginnings. For the moment two people choose each other..."></textarea>
+      </div>
+
+      <div style="margin-bottom:1.4rem">
+        <label style="display:flex;align-items:center;gap:.6rem;cursor:pointer">
+          <input type="checkbox" id="prodFeatured">
+          <span style="font-size:.9rem">Feature this object on the homepage</span>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:.8rem;justify-content:flex-end">
+        <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+        <button type="submit" class="btn btn-solid btn-sm" id="btnSaveProd">Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: CREATE COUPON -->
+<!-- ============================================================ -->
+<div id="modalCoupon" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="couponModalTitle">
+  <div class="modal-box" style="max-width:520px">
+    <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    <h3 id="couponModalTitle" style="font-size:1.35rem;margin-bottom:.4rem">Create Coupon Code</h3>
+    <p class="small" style="margin-bottom:1.4rem">Set discount rules and purchase constraints.</p>
+
+    <form id="couponForm">
+      <div class="admin-input-group">
+        <label for="coupCode">Coupon Code *</label>
+        <div style="display:flex;gap:.5rem">
+          <input type="text" id="coupCode" required placeholder="e.g. FESTIVE20" style="text-transform:uppercase;letter-spacing:.05em">
+          <button type="button" id="btnGenCode" class="btn btn-line btn-sm" style="white-space:nowrap">Generate</button>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="coupType">Discount Type</label>
+          <select id="coupType">
+            <option value="percent">Percentage (%)</option>
+            <option value="flat">Flat Amount (₹)</option>
+          </select>
+        </div>
+        <div class="admin-input-group">
+          <label for="coupVal">Discount Value *</label>
+          <input type="number" id="coupVal" required min="1" step="1" placeholder="e.g. 15">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="coupMinOrder">Minimum Order Value (₹)</label>
+          <input type="number" id="coupMinOrder" min="0" step="100" placeholder="e.g. 2500 (0 for none)">
+        </div>
+        <div class="admin-input-group">
+          <label for="coupMaxDisc">Max Discount Cap (₹)</label>
+          <input type="number" id="coupMaxDisc" min="0" step="50" placeholder="Optional cap for %">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="admin-input-group">
+          <label for="coupExpiry">Valid Until</label>
+          <input type="date" id="coupExpiry">
+        </div>
+        <div class="admin-input-group">
+          <label for="coupLimit">Usage Limit</label>
+          <input type="number" id="coupLimit" min="1" placeholder="Unlimited if blank">
+        </div>
+      </div>
+
+      <div class="admin-input-group">
+        <label for="coupDesc">Description / Note</label>
+        <input type="text" id="coupDesc" placeholder="e.g. 15% off orders above ₹2,500">
+      </div>
+
+      <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.4rem">
+        <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+        <button type="submit" class="btn btn-solid btn-sm">Create Coupon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

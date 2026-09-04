@@ -95,4 +95,7 @@
   buildControls();
   readURL();
   apply();
+  window.addEventListener("virai-catalogue-synced", function(){
+    apply();
+  });
 })();

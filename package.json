@@ -1,0 +1,17 @@
+{
+  "name": "virai",
+  "version": "1.0.0",
+  "description": "Contemporary fragrance and gifting house rooted in Tamil sensory heritage.",
+  "scripts": {
+    "dev": "node server.js",
+    "lint": "node -c server.js && node -c server/store.js",
+    "build": "echo 'Build ready'",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
+  }
+}

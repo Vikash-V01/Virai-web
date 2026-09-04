@@ -141,15 +141,24 @@
     var p = VIRAI.productById(id);
     if(!p) return;
     var c = cart();
-    var key = id + "|" + (opts.giftWrap ? "g" : "") + "|" + (opts.message || "");
+    var giftWrap = !!opts.giftWrap;
+    var message = (opts.message || "").slice(0, 180);
+    var qty = Math.max(1, parseInt(opts.qty, 10) || 1);
+
     var existing = null;
-    c.items.forEach(function(i){ if((id+"|"+(i.giftWrap?"g":"")+"|"+(i.message||"")) === key) existing = i; });
-    if(existing){ existing.qty += opts.qty || 1; }
-    else{
-      c.items.push({ id:id, qty:opts.qty||1, giftWrap:!!opts.giftWrap, message:(opts.message||"").slice(0,180) });
+    c.items.forEach(function(i){
+      if(i.id === id && !!i.giftWrap === giftWrap && (i.message || "") === message){
+        existing = i;
+      }
+    });
+
+    if(existing){
+      existing.qty += qty;
+    } else {
+      c.items.push({ id: id, qty: qty, giftWrap: giftWrap, message: message });
     }
     saveCart(c);
-    track("add_to_bag", { product_id:id, price:p.price, gift_wrap:!!opts.giftWrap, qty:opts.qty||1 });
+    track("add_to_bag", { product_id: id, price: p.price, gift_wrap: giftWrap, qty: qty });
     toast(p.name.split("\u00B7")[0].trim() + " added to bag");
     openDrawer();
   }
@@ -527,7 +536,14 @@
       if(bagBtn){ e.preventDefault(); openDrawer(bagBtn); }
     });
 
+    // Modular footer initialization (if loaded)
+    if(window.VIRAI_FOOTER && typeof window.VIRAI_FOOTER.init === "function"){
+      window.VIRAI_FOOTER.init();
+    }
+
     $all("form[data-form='newsletter']").forEach(function(f){
+      if(f.__newsletterBound) return;
+      f.__newsletterBound = true;
       f.addEventListener("submit", function(e){
         e.preventDefault();
         var email = $("input[type=email]", f).value.trim();
@@ -703,27 +719,34 @@
     });
   }
 
-  // Progressive-enhancement dropdown: replaces native <select.filter-select>
-  // UI with a VIRAI-styled panel while keeping the <select> as source of truth.
-  function initFilterSelects(){
-    $all("select.filter-select").forEach(function(sel){
+  // Progressive-enhancement dropdowns: transforms native <select>
+  // elements (both form fields and filter selects) into bespoke VIRAI
+  // luxury dropdowns while keeping the native <select> as the accessible source of truth.
+  function initViraiSelects(){
+    $all("select.field, select.filter-select, select[data-vr-select]").forEach(function(sel){
       if(sel.dataset.vrEnhanced) return;
       sel.dataset.vrEnhanced = "1";
 
+      var isField = sel.classList.contains("field") || !sel.classList.contains("filter-select");
       var wrap = document.createElement("div");
-      wrap.className = "vr-sel";
+      wrap.className = "vr-sel " + (isField ? "vr-sel-field" : "vr-sel-inline");
       sel.parentNode.insertBefore(wrap, sel);
       wrap.appendChild(sel);
 
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vr-sel-btn";
+      btn.setAttribute("role", "combobox");
       btn.setAttribute("aria-haspopup", "listbox");
       btn.setAttribute("aria-expanded", "false");
+      if(sel.id) btn.id = sel.id + "-trigger";
       if(sel.getAttribute("aria-label")) btn.setAttribute("aria-label", sel.getAttribute("aria-label"));
+      if(sel.disabled) btn.disabled = true;
+
       var label = document.createElement("span");
       label.className = "vr-sel-label";
       btn.appendChild(label);
+
       btn.insertAdjacentHTML("beforeend",
         '<svg class="vr-sel-caret" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" fill="none"/></svg>');
       wrap.appendChild(btn);
@@ -731,59 +754,275 @@
       var panel = document.createElement("div");
       panel.className = "vr-sel-panel";
       panel.setAttribute("role", "listbox");
+      panel.setAttribute("tabindex", "-1");
       wrap.appendChild(panel);
+
+      var activeIndex = -1;
+      var searchBuf = "";
+      var searchTimer = null;
 
       function syncLabel(){
         var opt = sel.options[sel.selectedIndex];
-        label.textContent = opt ? opt.text : "";
+        var text = opt ? opt.text : "";
+        label.textContent = text;
+        if(!opt || opt.value === "" || text === "Select…" || text === "Prefer to discuss"){
+          label.classList.add("is-placeholder");
+        } else {
+          label.classList.remove("is-placeholder");
+        }
+      }
+
+      function markSelected(){
+        var opts = $all(".vr-sel-opt", panel);
+        opts.forEach(function(item, i){
+          var isSel = sel.options[i] && (sel.options[i].selected || sel.options[i].value === sel.value);
+          item.setAttribute("aria-selected", isSel ? "true" : "false");
+          if(isSel) activeIndex = i;
+        });
       }
 
       function buildOptions(){
         panel.innerHTML = "";
-        $all("option", sel).forEach(function(o){
+        activeIndex = -1;
+        Array.prototype.forEach.call(sel.options, function(o, idx){
           var item = document.createElement("button");
           item.type = "button";
           item.className = "vr-sel-opt";
           item.setAttribute("role", "option");
-          item.textContent = o.text;
-          item.setAttribute("aria-selected", o.value === sel.value ? "true" : "false");
-          item.addEventListener("click", function(){
+          item.setAttribute("data-index", idx);
+          if(o.disabled) item.disabled = true;
+
+          var textSpan = document.createElement("span");
+          textSpan.className = "vr-sel-opt-text";
+          textSpan.innerHTML = '<span class="vr-sel-opt-dot"></span><span>' + (o.text || "") + '</span>';
+          item.appendChild(textSpan);
+
+          item.insertAdjacentHTML("beforeend",
+            '<svg class="vr-sel-opt-check" viewBox="0 0 12 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4.5 4.5 8 11 1"/></svg>');
+
+          var isSel = (o.value === sel.value) || o.selected;
+          item.setAttribute("aria-selected", isSel ? "true" : "false");
+          if(isSel) activeIndex = idx;
+
+          item.addEventListener("click", function(e){
+            e.stopPropagation();
+            if(o.disabled) return;
             sel.value = o.value;
+            sel.selectedIndex = idx;
+            sel.style.borderColor = "";
+            btn.style.borderColor = "";
+            btn.classList.remove("invalid");
             sel.dispatchEvent(new Event("change", { bubbles:true }));
+            sel.dispatchEvent(new Event("input", { bubbles:true }));
             syncLabel();
             markSelected();
             close();
+            btn.focus();
           });
+
+          item.addEventListener("mouseenter", function(){
+            highlightOption(idx, false);
+          });
+
           panel.appendChild(item);
         });
       }
 
-      function markSelected(){
-        $all(".vr-sel-opt", panel).forEach(function(item, i){
-          item.setAttribute("aria-selected", sel.options[i] && sel.options[i].value === sel.value ? "true" : "false");
+      function highlightOption(index, scrollIntoView){
+        var items = $all(".vr-sel-opt", panel);
+        items.forEach(function(it, i){
+          if(i === index){
+            it.classList.add("focused");
+            activeIndex = i;
+            if(scrollIntoView && typeof it.scrollIntoView === "function"){
+              it.scrollIntoView({ block: "nearest" });
+            }
+          } else {
+            it.classList.remove("focused");
+          }
         });
       }
 
+      function positionPanel(){
+        var rect = wrap.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        if(spaceBelow < 280 && rect.top > 280){
+          panel.classList.add("panel-top");
+        } else {
+          panel.classList.remove("panel-top");
+        }
+      }
+
       function open(){
+        // Close any other open dropdowns first
+        $all(".vr-sel.open").forEach(function(other){
+          if(other !== wrap) other.classList.remove("open");
+        });
+        positionPanel();
         wrap.classList.add("open");
         btn.setAttribute("aria-expanded", "true");
+        markSelected();
+        if(activeIndex >= 0){
+          highlightOption(activeIndex, true);
+        } else if(sel.selectedIndex >= 0){
+          highlightOption(sel.selectedIndex, true);
+        }
       }
+
       function close(){
         wrap.classList.remove("open");
         btn.setAttribute("aria-expanded", "false");
+        var items = $all(".vr-sel-opt", panel);
+        items.forEach(function(it){ it.classList.remove("focused"); });
       }
-      function toggle(){ wrap.classList.contains("open") ? close() : open(); }
 
-      btn.addEventListener("click", function(e){ e.stopPropagation(); toggle(); });
-      document.addEventListener("click", function(e){ if(!wrap.contains(e.target)) close(); });
-      document.addEventListener("keydown", function(e){ if(e.key === "Escape") close(); });
-      // Keep in sync when shop.js mutates the select programmatically.
-      sel.addEventListener("vr-sync", function(){ syncLabel(); markSelected(); });
+      function toggle(){
+        wrap.classList.contains("open") ? close() : open();
+      }
+
+      btn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        toggle();
+      });
+
+      // Keyboard accessibility
+      btn.addEventListener("keydown", function(e){
+        var isOpen = wrap.classList.contains("open");
+        var items = $all(".vr-sel-opt:not([disabled])", panel);
+        var total = items.length;
+
+        if(!isOpen){
+          if(e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === " " || e.key === "Enter"){
+            e.preventDefault();
+            open();
+            return;
+          }
+        } else {
+          if(e.key === "Escape"){
+            e.preventDefault();
+            close();
+            return;
+          }
+          if(e.key === "Tab"){
+            close();
+            return;
+          }
+          if(e.key === "ArrowDown"){
+            e.preventDefault();
+            var next = activeIndex + 1;
+            if(next >= sel.options.length) next = 0;
+            highlightOption(next, true);
+            return;
+          }
+          if(e.key === "ArrowUp"){
+            e.preventDefault();
+            var prev = activeIndex - 1;
+            if(prev < 0) prev = sel.options.length - 1;
+            highlightOption(prev, true);
+            return;
+          }
+          if(e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            var optItems = $all(".vr-sel-opt", panel);
+            if(activeIndex >= 0 && optItems[activeIndex]){
+              optItems[activeIndex].click();
+            } else {
+              close();
+            }
+            return;
+          }
+        }
+
+        // Typeahead jump
+        if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey){
+          clearTimeout(searchTimer);
+          searchBuf += e.key.toLowerCase();
+          searchTimer = setTimeout(function(){ searchBuf = ""; }, 600);
+
+          for(var i = 0; i < sel.options.length; i++){
+            var t = (sel.options[i].text || "").toLowerCase();
+            if(t.indexOf(searchBuf) === 0){
+              if(!isOpen) open();
+              highlightOption(i, true);
+              break;
+            }
+          }
+        }
+      });
+
+      // Mirror focus from native select to trigger button
+      sel.addEventListener("focus", function(){
+        btn.focus();
+      });
+
+      // Sync when external script updates the native select
+      sel.addEventListener("change", function(){
+        syncLabel();
+        markSelected();
+      });
+      sel.addEventListener("vr-sync", function(){
+        buildOptions();
+        syncLabel();
+        markSelected();
+      });
+
+      // Observe style/class changes on native select (e.g. forms.js marking invalid)
+      if(window.MutationObserver){
+        var observer = new MutationObserver(function(mutations){
+          mutations.forEach(function(m){
+            if(m.type === "attributes" && m.attributeName === "style"){
+              if(sel.style.borderColor){
+                btn.style.borderColor = sel.style.borderColor;
+                if(sel.style.borderColor.indexOf("A2593B") !== -1){
+                  btn.classList.add("invalid");
+                }
+              } else {
+                btn.style.borderColor = "";
+                btn.classList.remove("invalid");
+              }
+            } else if(m.type === "childList"){
+              buildOptions();
+              syncLabel();
+              markSelected();
+            }
+          });
+        });
+        observer.observe(sel, { attributes:true, childList:true, subtree:true });
+      }
 
       buildOptions();
       syncLabel();
     });
   }
+
+  // Global listeners for dropdown dismissal & responsive repositions
+  document.addEventListener("click", function(e){
+    if(!e.target.closest(".vr-sel")){
+      $all(".vr-sel.open").forEach(function(w){
+        w.classList.remove("open");
+        var b = w.querySelector(".vr-sel-btn");
+        if(b) b.setAttribute("aria-expanded", "false");
+      });
+    }
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+      $all(".vr-sel.open").forEach(function(w){
+        w.classList.remove("open");
+        var b = w.querySelector(".vr-sel-btn");
+        if(b){
+          b.setAttribute("aria-expanded", "false");
+          b.focus();
+        }
+      });
+    }
+  });
+
+  var initFilterSelects = initViraiSelects;
+  if(window.VIRAI) window.VIRAI.initSelects = initViraiSelects;
+  window.initViraiSelects = initViraiSelects;
 
   // The sensory experience layer is progressive: loaded only when
   // motion is welcome, and never required for content or commerce.
@@ -795,7 +1034,26 @@
     document.head.appendChild(s);
   }
 
+  function syncCatalogue(){
+    if(!window.fetch) return;
+    fetch("/api/products")
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(data){
+        if(data && Array.isArray(data.products) && window.VIRAI){
+          window.VIRAI.products = data.products;
+          if(data.config){
+            if(data.config.freeShipThreshold) window.VIRAI.freeShipThreshold = data.config.freeShipThreshold;
+            if(data.config.shipping) window.VIRAI.shipping = data.config.shipping;
+          }
+          try{ initDataRenders(); }catch(e){}
+          window.dispatchEvent(new CustomEvent("virai-catalogue-synced", { detail: data }));
+        }
+      })
+      .catch(function(){});
+  }
+
   document.addEventListener("DOMContentLoaded", function(){
+    try{ syncCatalogue(); }catch(e){}
     try{ initPageTransitions(); }catch(e){ console.error("[virai] initPageTransitions failed:", e); }
     try{ initChrome(); }catch(e){ console.error("[virai] initChrome failed:", e); }
     try{ initDataRenders(); }catch(e){ console.error("[virai] initDataRenders failed:", e); }

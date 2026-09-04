@@ -1,0 +1,8 @@
+{
+  "name": "Virai",
+  "description": "A contemporary fragrance and gifting house rooted in Tamil sensory heritage. Ainthinai, Collection 01 — five landscapes of love, poured as fragrance-led gifts with server-authoritative pricing governance and in-browser administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

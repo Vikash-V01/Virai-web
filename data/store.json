@@ -1,0 +1,542 @@
+{
+  "config": {
+    "currency": "INR",
+    "freeShipThreshold": 3000,
+    "shipping": {
+      "standard": 99,
+      "express": 350
+    }
+  },
+  "products": [
+    {
+      "id": "kurinji-candle",
+      "name": "Kurinji · Union Candle",
+      "sub": "Wild blue florals over cool forest honey",
+      "landscape": "kurinji",
+      "type": "Candle",
+      "family": [
+        "floral",
+        "fresh"
+      ],
+      "price": 2850,
+      "size": "240 g",
+      "burn": "≈ 50 hours",
+      "dims": "9 cm × 10 cm",
+      "weight": "640 g",
+      "notes": {
+        "top": [
+          "Mountain air",
+          "Wild lavender"
+        ],
+        "heart": [
+          "Blue florals",
+          "Shola honey"
+        ],
+        "base": [
+          "Soft woods",
+          "White musk"
+        ]
+      },
+      "shortScent": "Mountain dawn — wild blue florals settling into warm forest honey.",
+      "longScent": "It opens with cool mountain air and a whisper of wild lavender. At its heart, blue florals unfold over shola honey, drying down to soft woods and a trace of white musk. A scent like early light on a hillside.",
+      "story": "For beginnings. For the moment two people choose each other and the world feels newly made. Light it when something is starting.",
+      "img": {
+        "a": "img/1a.webp",
+        "b": "img/1b.webp",
+        "c": "img/1c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#E7EAF1 0%,#C7CEDF 52%,#56648C 100%)",
+        "glow": "radial-gradient(circle at 68% 30%,#F2F1EA 0%,transparent 55%)"
+      },
+      "featured": true,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z",
+      "updatedAt": "2026-09-04T14:32:27.853Z"
+    },
+    {
+      "id": "mullai-candle",
+      "name": "Mullai · Waiting Candle",
+      "sub": "Night jasmine, green leaves, patient musk",
+      "landscape": "mullai",
+      "type": "Candle",
+      "family": [
+        "floral"
+      ],
+      "price": 2850,
+      "size": "240 g",
+      "burn": "≈ 50 hours",
+      "dims": "9 cm × 10 cm",
+      "weight": "640 g",
+      "notes": {
+        "top": [
+          "Green leaf",
+          "Dew"
+        ],
+        "heart": [
+          "Night jasmine",
+          "Mullai blossom"
+        ],
+        "base": [
+          "Clean musk",
+          "Blond woods"
+        ]
+      },
+      "shortScent": "Forest jasmine at dusk — patient, green, and quietly sure.",
+      "longScent": "Crushed green leaf and evening dew open onto night jasmine in full bloom. Beneath it, clean musk and blond woods hold everything steady — a fragrance about waiting without anxiety.",
+      "story": "For the one who waits well. For distance that is only geography. For promises being kept slowly.",
+      "img": {
+        "a": "img/2a.webp",
+        "b": "img/2b.webp",
+        "c": "img/2c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#E4E8E0 0%,#BECBB8 52%,#55624B 100%)",
+        "glow": "radial-gradient(circle at 30% 26%,#F3F2E9 0%,transparent 55%)"
+      },
+      "featured": true,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "marutham-candle",
+      "name": "Marutham · Playful Conflict Candle",
+      "sub": "Rain on dry earth, paddy water, tender woods",
+      "landscape": "marutham",
+      "type": "Candle",
+      "family": [
+        "earthy"
+      ],
+      "price": 2850,
+      "size": "240 g",
+      "burn": "≈ 50 hours",
+      "dims": "9 cm × 10 cm",
+      "weight": "640 g",
+      "notes": {
+        "top": [
+          "Ozone",
+          "Green rice stem"
+        ],
+        "heart": [
+          "Wet earth",
+          "Marigold"
+        ],
+        "base": [
+          "Tender wood",
+          "Amber"
+        ]
+      },
+      "shortScent": "First rain on river-country earth — warmth after a storm of words.",
+      "longScent": "The electric hush before rain, then wet earth and marigold rising from river-country soil. Tender woods and soft amber remain, the way laughter returns after a quarrel.",
+      "story": "For love in its loud, living season. For the fight you both know will end folded into each other.",
+      "img": {
+        "a": "img/3a.webp",
+        "b": "img/3b.webp",
+        "c": "img/3c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#F1E4DC 0%,#DFB49E 52%,#A2593B 100%)",
+        "glow": "radial-gradient(circle at 70% 70%,#F6EBDD 0%,transparent 58%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "neithal-candle",
+      "name": "Neithal · Longing Candle",
+      "sub": "Salt air, sea foam, white lily",
+      "landscape": "neithal",
+      "type": "Candle",
+      "family": [
+        "fresh"
+      ],
+      "price": 2850,
+      "size": "240 g",
+      "burn": "≈ 50 hours",
+      "dims": "9 cm × 10 cm",
+      "weight": "640 g",
+      "notes": {
+        "top": [
+          "Sea salt",
+          "Cool mist"
+        ],
+        "heart": [
+          "White lily",
+          "Sea foam"
+        ],
+        "base": [
+          "Driftwood",
+          "Grey amber"
+        ]
+      },
+      "shortScent": "Salt wind over a grey sea — the ache of missing someone specific.",
+      "longScent": "Cold sea salt and mist drift into white lily and sea foam. Driftwood and grey amber anchor it — clean, mineral, a little melancholy. The smell of standing at the edge of the water, thinking of one person.",
+      "story": "For longing across distance. For the letter not yet sent. For loving someone who is far away.",
+      "img": {
+        "a": "img/4a.webp",
+        "b": "img/4b.webp",
+        "c": "img/4c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#E2EAED 0%,#B4C6CF 52%,#75909E 100%)",
+        "glow": "radial-gradient(circle at 34% 30%,#F1F3EF 0%,transparent 55%)"
+      },
+      "featured": true,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "palai-candle",
+      "name": "Palai · Separation Candle",
+      "sub": "Smoked woods, dry amber, desert myrrh",
+      "landscape": "palai",
+      "type": "Candle",
+      "family": [
+        "woody"
+      ],
+      "price": 2850,
+      "size": "240 g",
+      "burn": "≈ 50 hours",
+      "dims": "9 cm × 10 cm",
+      "weight": "640 g",
+      "notes": {
+        "top": [
+          "Sun-scorched air",
+          "Dry grass"
+        ],
+        "heart": [
+          "Smoked woods",
+          "Myrrh"
+        ],
+        "base": [
+          "Warm amber",
+          "Vetiver"
+        ]
+      },
+      "shortScent": "Sun-baked earth and smoked woods — absence, held with dignity.",
+      "longScent": "Dry grass and hot air give way to smoked woods and resinous myrrh. Warm amber and vetiver settle deep and stay — a fragrance for separation that does not collapse into despair.",
+      "story": "For seasons apart. For the strength of what remains when someone steps away and is still yours.",
+      "img": {
+        "a": "img/5a.webp",
+        "b": "img/5b.webp",
+        "c": "img/5c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#ECE7DD 0%,#CDC0AA 52%,#8B7F6C 100%)",
+        "glow": "radial-gradient(circle at 62% 32%,#F4EFE4 0%,transparent 56%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "kurinji-travel",
+      "name": "Kurinji · Union Travel Candle",
+      "sub": "The mountain dawn, made portable",
+      "landscape": "kurinji",
+      "type": "Travel Candle",
+      "family": [
+        "floral",
+        "fresh"
+      ],
+      "price": 1150,
+      "size": "90 g",
+      "burn": "≈ 18 hours",
+      "dims": "6 cm × 7 cm",
+      "weight": "220 g",
+      "notes": {
+        "top": [
+          "Mountain air",
+          "Wild lavender"
+        ],
+        "heart": [
+          "Blue florals",
+          "Shola honey"
+        ],
+        "base": [
+          "Soft woods",
+          "White musk"
+        ]
+      },
+      "shortScent": "The Kurinji scent, small enough to carry.",
+      "longScent": "Our Kurinji composition — cool air, wild lavender, blue florals over honeyed woods — poured into a travel-sized vessel for journeys and first meetings.",
+      "story": "A beginning, in miniature. The easiest way to meet Virai.",
+      "img": {
+        "a": "img/6a.webp",
+        "b": "img/6b.webp",
+        "c": "img/6c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#EDF0F5 0%,#C7CEDF 60%,#56648C 100%)",
+        "glow": "radial-gradient(circle at 66% 28%,#FFFFFF 0%,transparent 52%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "mullai-travel",
+      "name": "Mullai · Waiting Travel Candle",
+      "sub": "Night jasmine, made portable",
+      "landscape": "mullai",
+      "type": "Travel Candle",
+      "family": [
+        "floral"
+      ],
+      "price": 1150,
+      "size": "90 g",
+      "burn": "≈ 18 hours",
+      "dims": "6 cm × 7 cm",
+      "weight": "220 g",
+      "notes": {
+        "top": [
+          "Green leaf",
+          "Dew"
+        ],
+        "heart": [
+          "Night jasmine",
+          "Mullai blossom"
+        ],
+        "base": [
+          "Clean musk",
+          "Blond woods"
+        ]
+      },
+      "shortScent": "The Mullai scent, small enough to carry.",
+      "longScent": "Night jasmine and green leaf, steady musk beneath — the Mullai composition in a travel vessel, for hotel rooms and waiting rooms alike.",
+      "story": "Patience travels with you now.",
+      "img": {
+        "a": "img/7a.webp",
+        "b": "img/7b.webp",
+        "c": "img/7c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#EBEEE6 0%,#BECBB8 60%,#55624B 100%)",
+        "glow": "radial-gradient(circle at 30% 24%,#FAFAF2 0%,transparent 52%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "neithal-travel",
+      "name": "Neithal · Longing Travel Candle",
+      "sub": "Salt air and white lily, made portable",
+      "landscape": "neithal",
+      "type": "Travel Candle",
+      "family": [
+        "fresh"
+      ],
+      "price": 1150,
+      "size": "90 g",
+      "burn": "≈ 18 hours",
+      "dims": "6 cm × 7 cm",
+      "weight": "220 g",
+      "notes": {
+        "top": [
+          "Sea salt",
+          "Cool mist"
+        ],
+        "heart": [
+          "White lily",
+          "Sea foam"
+        ],
+        "base": [
+          "Driftwood",
+          "Grey amber"
+        ]
+      },
+      "shortScent": "The Neithal scent, small enough to carry.",
+      "longScent": "Sea salt, white lily, driftwood — the ache of the coastline distilled into a travel vessel.",
+      "story": "For sending your weather to someone far away.",
+      "img": {
+        "a": "img/8a.webp",
+        "b": "img/8b.webp",
+        "c": "img/8c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(160deg,#EAF1F3 0%,#B4C6CF 60%,#75909E 100%)",
+        "glow": "radial-gradient(circle at 36% 30%,#FBFCF9 0%,transparent 52%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "discovery-set",
+      "name": "Ainthinai Discovery Set",
+      "sub": "Five landscapes, five mini candles",
+      "landscape": null,
+      "type": "Set",
+      "family": [
+        "floral",
+        "woody",
+        "earthy",
+        "fresh"
+      ],
+      "price": 3600,
+      "size": "5 × 40 g",
+      "burn": "≈ 8 hours each",
+      "dims": "Gift box 22 cm × 12 cm",
+      "weight": "520 g",
+      "notes": {
+        "top": [
+          "Five openings"
+        ],
+        "heart": [
+          "Five hearts"
+        ],
+        "base": [
+          "Five bases"
+        ]
+      },
+      "shortScent": "Every landscape of Ainthinai, in one quiet box.",
+      "longScent": "All five landscapes — Kurinji's mountain dawn, Mullai's forest jasmine, Marutham's first rain, Neithal's salt coast, Palai's smoked woods — poured as five 40 g minis in a keepsake box.",
+      "story": "The complete emotional range of Collection 01. Find which landscape is yours before committing to full size. Our most-gifted object.",
+      "img": {
+        "a": "img/9a.webp",
+        "b": "img/9b.webp",
+        "c": "img/9c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(150deg,#F1EDE4 0%,#DCD5C6 45%,#A9A08D 100%)",
+        "glow": "radial-gradient(circle at 50% 22%,#FFFDF6 0%,transparent 55%)"
+      },
+      "featured": true,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    },
+    {
+      "id": "complete-collection",
+      "name": "Ainthinai Complete Collection",
+      "sub": "All five full-size landscapes",
+      "landscape": null,
+      "type": "Set",
+      "family": [
+        "floral",
+        "woody",
+        "earthy",
+        "fresh"
+      ],
+      "price": 12500,
+      "size": "5 × 240 g",
+      "burn": "≈ 250 hours total",
+      "dims": "Five vessels + archive box",
+      "weight": "3.4 kg",
+      "notes": {
+        "top": [
+          "—"
+        ],
+        "heart": [
+          "—"
+        ],
+        "base": [
+          "—"
+        ]
+      },
+      "shortScent": "The whole of Ainthinai, full size, archive-boxed.",
+      "longScent": "Every landscape of Collection 01 at full size — five 240 g candles presented in an archival keepsake box with the Ainthinai field guide.",
+      "story": "For the collector, or for a house that wants every mood of love within reach. Our most complete expression of Collection 01.",
+      "img": {
+        "a": "img/10a.webp",
+        "b": "img/10b.webp",
+        "c": "img/10c.webp"
+      },
+      "art": {
+        "bg": "linear-gradient(150deg,#EFEBE2 0%,#C9C2B2 50%,#6E675A 100%)",
+        "glow": "radial-gradient(circle at 44% 20%,#FFFEF8 0%,transparent 52%)"
+      },
+      "featured": false,
+      "status": "in_stock",
+      "createdAt": "2026-09-04T14:29:01.969Z"
+    }
+  ],
+  "coupons": [
+    {
+      "code": "FLASHSALE25",
+      "type": "percent",
+      "value": 25,
+      "minOrder": 2500,
+      "maxDiscount": null,
+      "usageLimit": null,
+      "timesUsed": 1,
+      "active": false,
+      "description": "Flash sale 25% discount",
+      "validUntil": null,
+      "createdAt": "2026-09-04T14:32:27.873Z"
+    },
+    {
+      "code": "WELCOME10",
+      "type": "percent",
+      "value": 10,
+      "minOrder": 2000,
+      "maxDiscount": 1000,
+      "active": false,
+      "description": "10% off on orders above ₹2,000",
+      "timesUsed": 0,
+      "validUntil": "2028-12-31"
+    },
+    {
+      "code": "VIRAI500",
+      "type": "flat",
+      "value": 500,
+      "minOrder": 3500,
+      "maxDiscount": 500,
+      "active": false,
+      "description": "₹500 flat discount on orders above ₹3,500",
+      "timesUsed": 0,
+      "validUntil": "2028-12-31"
+    },
+    {
+      "code": "FESTIVE15",
+      "type": "percent",
+      "value": 15,
+      "minOrder": 5000,
+      "maxDiscount": 2000,
+      "active": true,
+      "description": "15% festive gift discount on orders above ₹5,000",
+      "timesUsed": 0,
+      "validUntil": "2028-12-31"
+    }
+  ],
+  "orders": [
+    {
+      "id": "VR-MTN1ZBVZ-6870",
+      "items": [
+        {
+          "id": "kurinji-candle",
+          "name": "Kurinji · Union Candle",
+          "price": 2950,
+          "qty": 1,
+          "giftWrap": false,
+          "wrapCost": 0,
+          "lineTotal": 2950,
+          "message": ""
+        }
+      ],
+      "subtotal": 2950,
+      "discount": 738,
+      "couponCode": "FLASHSALE25",
+      "shippingMethod": "standard",
+      "shippingCost": 99,
+      "total": 2311,
+      "contact": {
+        "name": "Arjun Sundaram",
+        "email": "arjun@example.com",
+        "phone": "+919876543210",
+        "address": "14 Poes Garden",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "pincode": "600086"
+      },
+      "status": "Confirmed",
+      "createdAt": "2026-09-04T14:32:27.888Z"
+    }
+  ],
+  "admin": {
+    "username": "admin",
+    "salt": "e955b7efd91712a352214c82394a5656",
+    "hash": "8f9d7728dfd9869b45bd6688b59e6d15b63c624a50f2ed3787991afffbd5519c89502715d6ed24bf12ca177a55ea07b0fa48af2a8ae971230c803044cbf5a837"
+  }
+}

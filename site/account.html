@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer Account & Order History | VIRAI</title>
+<meta name="description" content="Manage your personal VIRAI account, view past fragrance orders, update delivery addresses, and track consignments.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+<style>
+.auth-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  max-width: 480px;
+  margin: 2rem auto;
+  border-radius: 4px;
+}
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+}
+.auth-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.8rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--mineral);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.auth-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.f-group {
+  margin-bottom: 1.2rem;
+}
+.f-label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+.f-input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--rice);
+  font-size: 0.92rem;
+  border-radius: 2px;
+  color: var(--ink);
+}
+.f-input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+.order-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+  border-radius: 4px;
+}
+.order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
+}
+.badge-status {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  background: var(--smoke);
+  color: var(--ink);
+}
+.badge-confirmed {
+  background: rgba(85, 98, 75, 0.15);
+  color: var(--mullai);
+  font-weight: 500;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 800px) {
+  .profile-grid {
+    grid-template-columns: 300px 1fr;
+  }
+}
+.account-nav-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.account-nav-btn.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--paper);
+  border-left-color: var(--ink);
+}
+.otp-preview-banner {
+  background: rgba(86, 100, 140, 0.1);
+  border: 1px dashed var(--kurinji);
+  padding: 0.8rem 1rem;
+  margin-top: 1rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  color: var(--kurinji);
+}
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  background: #ffffff;
+  color: #3c4043;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-google:hover {
+  background-color: #f8f9fa;
+  border-color: #dadce0;
+  box-shadow: 0 1px 3px rgba(60,64,67,0.08);
+}
+.btn-google:active {
+  background-color: #f1f3f4;
+}
+.btn-google svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0 1.25rem;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--line);
+}
+.auth-divider::before {
+  margin-right: 0.85em;
+}
+.auth-divider::after {
+  margin-left: 0.85em;
+}
+</style>
+</head>
+<body data-page="account">
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="top-announce">
+  <div class="wrap head-util">
+    <span>Complimentary standard shipping over ₹3,000</span>
+    <nav class="util-links" aria-label="Support">
+      <a href="contact.html">Contact</a>
+      <a href="faq.html">FAQs</a>
+      <a href="shipping.html">Shipping &amp; Returns</a>
+    </nav>
+  </div>
+</div>
+
+<header class="site-head">
+  <div class="wrap head-main">
+    <button class="burger" aria-expanded="false" aria-label="Open menu" aria-controls="mmenu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="head-nav head-left" aria-label="Primary">
+      <div class="has-sub">
+        <a href="shop.html">Shop</a>
+        <div class="sub">
+          <a href="shop.html">All Products</a>
+          <a href="shop.html?type=Candle">Candles</a>
+          <a href="shop.html?type=Set">Gift Sets</a>
+          <a href="shop.html?family=floral">By Fragrance</a>
+        </div>
+      </div>
+      <div class="has-sub">
+        <a href="ainthinai.html">Ainthinai</a>
+        <div class="sub">
+          <a href="ainthinai.html">Collection 01 - Overview</a>
+          <a href="landscape.html?id=kurinji">Kurinji · Union</a>
+          <a href="landscape.html?id=mullai">Mullai · Waiting</a>
+          <a href="landscape.html?id=marutham">Marutham · Playful Conflict</a>
+          <a href="landscape.html?id=neithal">Neithal · Longing</a>
+          <a href="landscape.html?id=palai">Palai · Separation</a>
+        </div>
+      </div>
+      <div class="has-sub">
+        <a href="gift.html">Gift</a>
+        <div class="sub">
+          <a href="find-your-virai.html">Find Your Virai</a>
+          <a href="gift.html#personal">Personal Gifting</a>
+          <a href="weddings.html">Weddings &amp; Events</a>
+          <a href="corporate.html">Corporate Gifting</a>
+        </div>
+      </div>
+    </nav>
+    <a class="brand-mark" href="index.html" aria-label="Virai - home">
+      <img class="logo-img" src="img/virai-logo.webp" alt="Virai">
+    </a>
+    <nav class="head-nav head-right" aria-label="Secondary">
+      <div class="has-sub">
+        <a href="story.html">Discover</a>
+        <div class="sub">
+          <a href="story.html">Our Story</a>
+          <a href="fragrance-memory.html">Fragrance &amp; Memory</a>
+          <a href="craft.html">Craft &amp; Materials</a>
+        </div>
+      </div>
+      <a class="icon-btn" href="search.html">Search</a>
+      <a class="icon-btn" href="account.html" style="font-weight:600">Account</a>
+      <button class="icon-btn" data-open-bag>Bag <span class="bag-count">0</span></button>
+    </nav>
+    <button class="icon-btn m-bag" data-open-bag aria-label="Open bag">Bag <span class="bag-count">0</span></button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- AUTHENTICATION VIEW (When signed out) -->
+  <section id="authSection" class="section-tight wrap" style="display:block">
+    <div class="center" style="max-width:580px;margin:0 auto 1.5rem">
+      <p class="kicker">Patron Sanctuary</p>
+      <h1>Your Account</h1>
+      <p class="lede" style="margin-top:.4rem">Sign in or create an account to view past fragrance consignments, track dispatch, and save delivery addresses.</p>
+    </div>
+
+    <div class="auth-panel">
+      <!-- One-click Google Sign-In -->
+      <button type="button" class="btn-google" id="btnGoogleLogin" onclick="handleGoogleSignIn()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span id="btnGoogleText">Continue with Google</span>
+      </button>
+
+      <div class="auth-divider">or use email access</div>
+
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" id="tabOtp" onclick="switchAuthTab('otp')">Fast Code (OTP)</button>
+        <button type="button" class="auth-tab" id="tabLogin" onclick="switchAuthTab('login')">Password</button>
+        <button type="button" class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- 1. Passwordless OTP Form -->
+      <form id="formOtpReq" onsubmit="handleRequestOtp(event)">
+        <p class="small muted" style="margin-bottom:1.2rem">Enter your email to receive a secure 6-digit access code for instant sign in without remembering a password.</p>
+        <div class="f-group">
+          <label class="f-label" for="otpEmail">Email address</label>
+          <input type="email" id="otpEmail" class="f-input" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <button type="submit" class="btn btn-solid" id="btnReqOtp" style="width:100%;padding:.85rem">Send Access Code</button>
+      </form>
+
+      <form id="formOtpVerify" style="display:none" onsubmit="handleVerifyOtp(event)">
+        <p class="small muted" style="margin-bottom:1rem">Enter the 6-digit access code sent to <strong id="lblOtpDest"></strong></p>
+        <div class="f-group">
+          <label class="f-label" for="otpCode">6-Digit Verification Code</label>
+          <input type="text" id="otpCode" class="f-input" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required style="letter-spacing:.25em;font-size:1.1rem;text-align:center">
+        </div>
+        <div id="otpPreviewNotice" class="otp-preview-banner" style="display:none"></div>
+        <button type="submit" class="btn btn-solid" id="btnVerifyOtp" style="width:100%;padding:.85rem;margin-top:1rem">Verify &amp; Enter</button>
+        <p class="center" style="margin-top:.8rem">
+          <button type="button" class="link-u small" onclick="resendOtp()">Change email or resend code</button>
+        </p>
+      </form>
+
+      <!-- 2. Standard Password Login Form -->
+      <form id="formLogin" style="display:none" onsubmit="handlePasswordLogin(event)">
+        <div class="f-group">
+          <label class="f-label" for="loginEmail">Email address</label>
+          <input type="email" id="loginEmail" class="f-input" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="f-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <label class="f-label" for="loginPass" style="margin:0">Password</label>
+            <button type="button" class="link-u small" onclick="showForgotPassword()">Forgot?</button>
+          </div>
+          <input type="password" id="loginPass" class="f-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-solid" id="btnLogin" style="width:100%;padding:.85rem">Sign In</button>
+      </form>
+
+      <!-- 3. Registration Form -->
+      <form id="formRegister" style="display:none" onsubmit="handleRegister(event)">
+        <div class="f-group">
+          <label class="f-label" for="regName">Full Name</label>
+          <input type="text" id="regName" class="f-input" placeholder="Sundari Raman" required autocomplete="name">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="regEmail">Email address</label>
+          <input type="email" id="regEmail" class="f-input" placeholder="sundari@example.com" required autocomplete="email">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="regPhone">Phone (optional)</label>
+          <input type="tel" id="regPhone" class="f-input" placeholder="+91 98400 12345" autocomplete="tel">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="regPass">Create Password (min 8 chars)</label>
+          <input type="password" id="regPass" class="f-input" placeholder="••••••••" minlength="8" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-solid" id="btnRegister" style="width:100%;padding:.85rem">Create Account</button>
+        <p class="small muted center" style="margin-top:.8rem">Protected under our <a href="privacy.html" class="link-u">Privacy Policy</a> &middot; DPDP Act 2023</p>
+      </form>
+
+      <div id="authAlert" style="display:none;margin-top:1.2rem;padding:.8rem;border-radius:2px;font-size:.85rem;line-height:1.5"></div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD VIEW (When signed in) -->
+  <section id="dashSection" class="section-tight wrap" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:1.5rem;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem">
+      <div>
+        <p class="kicker" style="margin-bottom:.4rem">Patron Portal</p>
+        <h1 style="font-size:clamp(1.8rem,3vw,2.4rem)">Vanakkam, <span id="dashCustName">Patron</span></h1>
+        <p class="small muted" id="dashCustEmail">patron@virai.in</p>
+      </div>
+      <div>
+        <button type="button" onclick="handleLogout()" class="btn btn-line" style="padding:.55rem 1.1rem;font-size:.84rem">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <!-- Sidebar Navigation -->
+      <aside>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden">
+          <button type="button" class="account-nav-btn active" id="btnViewOrders" onclick="switchDashboardTab('orders')">
+            Orders &amp; Consignments (<span id="countOrders">0</span>)
+          </button>
+          <button type="button" class="account-nav-btn" id="btnViewProfile" onclick="switchDashboardTab('profile')">
+            Account Details &amp; Addresses
+          </button>
+          <a href="shop.html" class="account-nav-btn" style="border-top:1px solid var(--line-soft)">
+            Explore Boutique &rarr;
+          </a>
+        </div>
+
+        <div style="margin-top:1.5rem;padding:1.2rem;background:var(--paper);border:1px solid var(--line);border-radius:4px">
+          <h4 style="font-size:.92rem;margin-bottom:.4rem">Need assistance?</h4>
+          <p class="small muted">Our concierge is at your service for wedding consultations and parcel inquiries.</p>
+          <p style="margin-top:.8rem"><a href="contact.html" class="link-u small">Contact Concierge</a></p>
+        </div>
+      </aside>
+
+      <!-- Main Panel -->
+      <div>
+        <!-- TAB 1: Orders -->
+        <div id="panelOrders">
+          <h2 style="font-size:1.3rem;margin-bottom:1rem">Your Consignments</h2>
+          <div id="ordersListContainer">
+            <p class="small muted">Loading past orders...</p>
+          </div>
+        </div>
+
+        <!-- TAB 2: Profile & Saved Address -->
+        <div id="panelProfile" style="display:none">
+          <h2 style="font-size:1.3rem;margin-bottom:1rem">Profile Details</h2>
+          <form id="formUpdateProfile" onsubmit="handleUpdateProfile(event)" style="background:var(--paper);border:1px solid var(--line);padding:1.5rem;border-radius:4px;max-width:540px">
+            <div class="f-group">
+              <label class="f-label" for="profName">Name</label>
+              <input type="text" id="profName" class="f-input" required>
+            </div>
+            <div class="f-group">
+              <label class="f-label" for="profPhone">Phone Number</label>
+              <input type="tel" id="profPhone" class="f-input">
+            </div>
+
+            <h3 style="font-size:1.05rem;margin:1.8rem 0 .8rem">Default Delivery Address</h3>
+            <div class="f-group">
+              <label class="f-label" for="addrStreet">Street / Apartment / Landmark</label>
+              <input type="text" id="addrStreet" class="f-input" placeholder="Flat 4B, Gardenia Apts, 12th Cross">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div class="f-group">
+                <label class="f-label" for="addrCity">City</label>
+                <input type="text" id="addrCity" class="f-input" placeholder="Chennai">
+              </div>
+              <div class="f-group">
+                <label class="f-label" for="addrState">State</label>
+                <input type="text" id="addrState" class="f-input" placeholder="Tamil Nadu">
+              </div>
+            </div>
+            <div class="f-group">
+              <label class="f-label" for="addrPin">PIN Code</label>
+              <input type="text" id="addrPin" class="f-input" placeholder="600028" maxlength="10">
+            </div>
+
+            <button type="submit" id="btnSaveProfile" class="btn btn-solid" style="padding:.75rem 1.4rem">Save Changes</button>
+            <span id="profFeedback" style="margin-left:1rem;font-size:.85rem"></span>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" data-modular-footer id="site-footer"></footer>
+<script src="js/data.js"></script>
+<script src="js/footer.js"></script>
+<script src="js/main.js"></script>
+<script src="js/account.js"></script>
+</body>
+</html>

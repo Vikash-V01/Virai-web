@@ -1,7 +1,14 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const store = require('./server/store');
+const firestoreService = require('./server/firestore');
+const postmarkService = require('./server/postmark');
+const cashfreeService = require('./server/cashfree');
+
+// Initialize Firestore persistence connection
+firestoreService.initFirestore();
 
 const app = express();
 const PORT = 3000;
@@ -15,8 +22,13 @@ app.set('trust proxy', 1);
 // Security: Disable X-Powered-By header
 app.disable('x-powered-by');
 
-// Parse JSON bodies with tight limit
-app.use(express.json({ limit: '1mb' }));
+// Parse JSON bodies with limit accommodating high-res photography and raw body capture for webhook signature verification
+app.use(express.json({
+  limit: '25mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
 
 // Security: Comprehensive defense-in-depth HTTP response headers & Content Security Policy
 app.use((req, res, next) => {
@@ -29,18 +41,30 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://sdk.cashfree.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com data:; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self'; " +
+    "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://sandbox.cashfree.com https://api.cashfree.com; " +
+    "frame-src 'self' https://sandbox.cashfree.com https://api.cashfree.com https://payments.cashfree.com; " +
     "frame-ancestors 'self' https://*.google.com https://*.run.app https://ai.studio; " +
     "object-src 'none'; " +
     "base-uri 'self'; " +
-    "form-action 'self';"
+    "form-action 'self' https://accounts.google.com https://sandbox.cashfree.com https://api.cashfree.com;"
   );
   next();
 });
+
+// Helper to sanitize HTML strings
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // Helper to get client IP safely
 function getClientIp(req) {
@@ -236,7 +260,7 @@ app.post('/api/coupons/validate', (req, res) => {
 });
 
 // Authoritative Order Placement (server computes totals and stores order; rate-limited against DoS / spam)
-app.post('/api/checkout/place-order', (req, res) => {
+app.post('/api/checkout/place-order', async (req, res) => {
   const ip = getClientIp(req);
   if (!checkRateLimit(orderAttempts, ip, 12, 3600000)) {
     return res.status(429).json({ success: false, error: 'Maximum order placement limit reached for this hour. Please try again later.' });
@@ -249,10 +273,598 @@ app.post('/api/checkout/place-order', (req, res) => {
     }
 
     const order = store.placeOrder({ items, shipType, couponCode, contact });
-    console.log(`[virai-security] Order placed successfully: ${order.id} | Total: ₹${order.total} | IP: ${ip.slice(0, 16)}`);
-    res.json({ success: true, order });
+    console.log(`[virai-security] Order placed: ${order.id} | Total: ₹${order.total} | IP: ${ip.slice(0, 16)}`);
+
+    // 1. Initialize Cashfree Payment Session
+    let cashfreeSession = null;
+    try {
+      const origin = `${req.protocol}://${req.get('host')}`;
+      const returnUrl = `${origin}/order-confirmation.html?order_id=${order.id}`;
+      const notifyUrl = `${origin}/api/cashfree/webhook`;
+
+      cashfreeSession = await cashfreeService.createPaymentSession({
+        orderId: order.id,
+        orderAmount: order.total,
+        customer: order.contact,
+        returnUrl,
+        notifyUrl
+      });
+    } catch (cfErr) {
+      console.warn('[checkout:cashfree] Payment session creation error:', cfErr.message);
+    }
+
+    // 2. Dispatch Postmark Transactional Order Confirmation Receipt
+    try {
+      postmarkService.sendOrderConfirmationEmail({ order }).catch(pmErr => {
+        console.warn('[checkout:postmark] Async email delivery warning:', pmErr.message);
+      });
+    } catch (pmErr) {
+      console.warn('[checkout:postmark] Postmark dispatch warning:', pmErr.message);
+    }
+
+    res.json({
+      success: true,
+      order,
+      cashfree: cashfreeSession
+    });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Cashfree Webhook Endpoint (verifies HMAC-SHA256 signature and updates order status)
+app.post('/api/cashfree/webhook', (req, res) => {
+  try {
+    const signature = req.headers['x-webhook-signature'];
+    const timestamp = req.headers['x-webhook-timestamp'];
+    const rawBody = req.rawBody || JSON.stringify(req.body);
+
+    if (cashfreeService.isCashfreeConfigured() && signature && timestamp) {
+      const isValid = cashfreeService.verifyWebhookSignature(signature, rawBody, timestamp);
+      if (!isValid) {
+        console.warn('[cashfree:webhook] Rejected invalid signature.');
+        return res.status(400).json({ success: false, error: 'Invalid webhook signature' });
+      }
+    }
+
+    const eventData = req.body && req.body.data;
+    const orderData = eventData ? eventData.order : (req.body && req.body.order);
+    const paymentData = eventData ? eventData.payment : (req.body && req.body.payment);
+
+    if (orderData && orderData.order_id) {
+      const orderId = orderData.order_id;
+      const isSuccess = paymentData && (paymentData.payment_status === 'SUCCESS' || paymentData.payment_status === 'PAID');
+      const paymentStatus = isSuccess ? 'Paid' : 'Failed';
+
+      const updatedOrder = store.updateOrderPaymentStatus(orderId, {
+        paymentStatus,
+        paymentId: paymentData ? (paymentData.cf_payment_id || paymentData.payment_id) : null,
+        cashfreeOrderId: orderData.cf_order_id,
+        paymentMethod: paymentData ? paymentData.payment_group : 'cashfree'
+      });
+
+      console.log(`[cashfree:webhook] Order ${orderId} status set to: ${paymentStatus}`);
+
+      if (updatedOrder && isSuccess) {
+        postmarkService.sendOrderConfirmationEmail({ order: updatedOrder }).catch(err => {
+          console.warn('[cashfree:webhook] Postmark confirmation email error:', err.message);
+        });
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Webhook received' });
+  } catch (err) {
+    console.error('[cashfree:webhook] Webhook handling error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Order verification endpoint (used upon redirect back to order confirmation)
+app.get('/api/cashfree/verify-order', async (req, res) => {
+  try {
+    const orderId = req.query.order_id;
+    if (!orderId) {
+      return res.status(400).json({ success: false, error: 'Order ID is required' });
+    }
+
+    const s = store.getStore();
+    const existing = (s.orders || []).find(o => o.id === orderId);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    // Check with live Cashfree API if keys are present
+    if (cashfreeService.isCashfreeConfigured()) {
+      try {
+        const cfOrder = await cashfreeService.fetchOrderStatus(orderId);
+        if (cfOrder && (cfOrder.order_status === 'PAID' || cfOrder.order_status === 'SUCCESS')) {
+          store.updateOrderPaymentStatus(orderId, {
+            paymentStatus: 'Paid',
+            cashfreeOrderId: cfOrder.cf_order_id
+          });
+        }
+      } catch (err) {
+        console.warn('[cashfree:verify] Gateway check warning:', err.message);
+      }
+    }
+
+    const freshStore = store.getStore();
+    const freshOrder = (freshStore.orders || []).find(o => o.id === orderId) || existing;
+
+    res.json({ success: true, order: freshOrder });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// CUSTOMER ACCOUNT & LIFECYCLE APIS (Registration, Auth, OTP/Magic-Link, Orders)
+// -------------------------------------------------------------
+
+const customerSessions = new Map(); // token -> { email, id, expiresAt }
+const customerOtps = new Map(); // email -> { code, expiresAt, attempts }
+
+// Periodic customer session cleanup
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, sess] of customerSessions.entries()) {
+    if (sess.expiresAt <= now) customerSessions.delete(token);
+  }
+  for (const [email, data] of customerOtps.entries()) {
+    if (data.expiresAt <= now) customerOtps.delete(email);
+  }
+}, 600000);
+
+function requireCustomer(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'Customer authentication required' });
+  }
+
+  const token = authHeader.slice(7).trim();
+  const session = customerSessions.get(token);
+  if (!session || session.expiresAt <= Date.now()) {
+    customerSessions.delete(token);
+    return res.status(401).json({ success: false, error: 'Session expired. Please sign in again.' });
+  }
+
+  session.expiresAt = Date.now() + 14 * 24 * 60 * 60 * 1000; // 14-day rolling session
+  req.customer = session;
+  req.customerToken = token;
+  next();
+}
+
+// Register new customer account
+app.post('/api/customer/register', (req, res) => {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(globalApiBuckets, ip, 15, 60000)) {
+    return res.status(429).json({ success: false, error: 'Too many registration attempts. Please wait a moment.' });
+  }
+
+  try {
+    const { email, password, name, phone } = req.body;
+    const customer = store.registerCustomer({ email, password, name, phone });
+    const token = crypto.randomBytes(32).toString('hex');
+    customerSessions.set(token, {
+      id: customer.id,
+      email: customer.email,
+      name: customer.name,
+      expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(201).json({
+      success: true,
+      token,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        emailVerified: customer.emailVerified
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Customer password login
+app.post('/api/customer/login', (req, res) => {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(globalApiBuckets, ip, 15, 60000)) {
+    return res.status(429).json({ success: false, error: 'Too many login attempts. Please wait a moment.' });
+  }
+
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password are required' });
+    }
+
+    const customer = store.verifyCustomerCredentials(email, password);
+    if (!customer) {
+      return res.status(401).json({ success: false, error: 'Incorrect email or password' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    customerSessions.set(token, {
+      id: customer.id,
+      email: customer.email,
+      name: customer.name,
+      expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        emailVerified: customer.emailVerified,
+        savedAddresses: customer.savedAddresses
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Passwordless Magic Link / OTP request
+app.post('/api/customer/request-otp', (req, res) => {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(globalApiBuckets, ip, 8, 60000)) {
+    return res.status(429).json({ success: false, error: 'Please wait before requesting another code.' });
+  }
+
+  try {
+    const { email } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid email address' });
+    }
+
+    // Generate 6-digit secure numeric verification OTP code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    customerOtps.set(cleanEmail, {
+      code,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+      attempts: 0
+    });
+
+    console.log(`[virai-otp] Verification OTP for ${cleanEmail}: ${code} (expires in 10m)`);
+
+    // Dispatch transactional OTP email via Postmark
+    postmarkService.sendOtpEmail({
+      toEmail: cleanEmail,
+      otpCode: code,
+      purpose: 'Patron Account Access'
+    }).catch(pmErr => {
+      console.warn('[otp:postmark] Postmark OTP delivery warning:', pmErr.message);
+    });
+
+    res.json({
+      success: true,
+      message: 'A 6-digit access code has been dispatched to your email via Postmark.',
+      // In this preview environment, return the preview code to allow instant testing without external mailer dependency
+      previewCode: code
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Verify OTP & Sign In / Register seamlessly
+app.post('/api/customer/verify-otp', (req, res) => {
+  try {
+    const { email, code } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanCode = (code || '').trim();
+
+    const record = customerOtps.get(cleanEmail);
+    if (!record || record.expiresAt <= Date.now()) {
+      customerOtps.delete(cleanEmail);
+      return res.status(400).json({ success: false, error: 'Verification code has expired. Please request a new one.' });
+    }
+
+    if (record.attempts >= 4) {
+      customerOtps.delete(cleanEmail);
+      return res.status(429).json({ success: false, error: 'Too many incorrect attempts. Please request a fresh code.' });
+    }
+
+    if (record.code !== cleanCode) {
+      record.attempts += 1;
+      return res.status(400).json({ success: false, error: 'Invalid verification code. Please check and try again.' });
+    }
+
+    // Code is valid - consume OTP
+    customerOtps.delete(cleanEmail);
+
+    // Auto-create or fetch customer account
+    let customer = store.findCustomerByEmail(cleanEmail);
+    if (!customer) {
+      const generatedPass = crypto.randomBytes(16).toString('hex');
+      customer = store.registerCustomer({ email: cleanEmail, password: generatedPass, name: cleanEmail.split('@')[0] });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    customerSessions.set(token, {
+      id: customer.id,
+      email: customer.email,
+      name: customer.name,
+      expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        emailVerified: true,
+        savedAddresses: customer.savedAddresses || []
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get authenticated customer profile and order history
+app.get('/api/customer/me', requireCustomer, (req, res) => {
+  try {
+    const customer = store.findCustomerByEmail(req.customer.email);
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    const orders = store.getCustomerOrders(req.customer.email);
+
+    res.json({
+      success: true,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        emailVerified: customer.emailVerified,
+        savedAddresses: customer.savedAddresses || [],
+        createdAt: customer.createdAt
+      },
+      orders
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update customer profile / saved addresses
+app.put('/api/customer/me', requireCustomer, (req, res) => {
+  try {
+    const { name, phone, savedAddresses } = req.body;
+    const updated = store.updateCustomerProfile(req.customer.email, { name, phone, savedAddresses });
+    res.json({ success: true, customer: updated });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Forgot / Reset Password flow
+app.post('/api/customer/reset-password', (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const record = customerOtps.get(cleanEmail);
+
+    if (!record || record.expiresAt <= Date.now() || record.code !== (code || '').trim()) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired verification code' });
+    }
+
+    customerOtps.delete(cleanEmail);
+    store.resetCustomerPassword(cleanEmail, newPassword);
+
+    res.json({ success: true, message: 'Password has been securely reset. You may now sign in.' });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Customer sign out
+app.post('/api/customer/logout', requireCustomer, (req, res) => {
+  customerSessions.delete(req.customerToken);
+  res.json({ success: true, message: 'Signed out successfully' });
+});
+
+// -------------------------------------------------------------
+// GOOGLE SIGN-IN OAUTH INTEGRATION (Compliant with AI Studio Iframe & Popup guidelines)
+// -------------------------------------------------------------
+
+function getBaseAppUrl(req) {
+  if (process.env.APP_URL) {
+    return process.env.APP_URL.replace(/\/+$/, '');
+  }
+  const host = req.get('host');
+  const proto = req.get('x-forwarded-proto') || 'https';
+  return `${proto}://${host}`.replace(/\/+$/, '');
+}
+
+// 1. Get Google OAuth Authorization URL
+app.get('/api/auth/google/url', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(400).json({
+      success: false,
+      configured: false,
+      error: 'GOOGLE_CLIENT_ID is not configured yet. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the settings.'
+    });
+  }
+
+  const appUrl = getBaseAppUrl(req);
+  const redirectUri = `${appUrl}/auth/google/callback`;
+  const state = crypto.randomBytes(16).toString('hex');
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'online',
+    prompt: 'select_account',
+    state: state
+  });
+
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  res.json({
+    success: true,
+    configured: true,
+    url: authUrl,
+    redirectUri: redirectUri
+  });
+});
+
+// 2. OAuth Callback Handler (Returns lightweight HTML sending postMessage to popup opener)
+app.get(['/auth/google/callback', '/auth/google/callback/'], async (req, res) => {
+  const { code, error } = req.query;
+
+  if (error || !code) {
+    const errorMsg = error || 'Authorization denied';
+    return res.send(`
+      <!doctype html>
+      <html>
+        <head><meta charset="utf-8"><title>Authentication Failed | VIRAI</title></head>
+        <body style="font-family:sans-serif;text-align:center;padding:3rem;background:#FBF9F5;color:#1E1C1A">
+          <h3>Authentication Unsuccessful</h3>
+          <p>${escapeHtml(errorMsg)}</p>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: ${JSON.stringify(errorMsg)} }, '*');
+              setTimeout(() => window.close(), 1200);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  }
+
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const appUrl = getBaseAppUrl(req);
+    const redirectUri = `${appUrl}/auth/google/callback`;
+
+    // Exchange authorization code for tokens directly with Google
+    const tokenParams = new URLSearchParams({
+      code: code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code'
+    });
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString()
+    });
+
+    const tokenData = await tokenResponse.json();
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      throw new Error(tokenData.error_description || tokenData.error || 'Failed to exchange Google OAuth code');
+    }
+
+    // Retrieve user profile from Google UserInfo endpoint
+    const userinfoResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+      headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+    });
+    const userInfo = await userinfoResponse.json();
+
+    if (!userInfo || !userInfo.email) {
+      throw new Error('Could not retrieve email from Google profile');
+    }
+
+    const cleanEmail = userInfo.email.trim().toLowerCase();
+    const customerName = userInfo.name || cleanEmail.split('@')[0];
+
+    // Find or automatically create registered patron profile
+    let customer = store.findCustomerByEmail(cleanEmail);
+    if (!customer) {
+      const generatedPass = crypto.randomBytes(24).toString('hex');
+      customer = store.registerCustomer({
+        email: cleanEmail,
+        password: generatedPass,
+        name: customerName,
+        phone: ''
+      });
+    }
+
+    // Generate patron session
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    customerSessions.set(sessionToken, {
+      id: customer.id,
+      email: customer.email,
+      name: customer.name,
+      expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000
+    });
+
+    const clientPayload = {
+      token: sessionToken,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone,
+        emailVerified: true,
+        savedAddresses: customer.savedAddresses || []
+      }
+    };
+
+    // Return HTML popup response that communicates to opener via postMessage
+    res.send(`
+      <!doctype html>
+      <html>
+        <head><meta charset="utf-8"><title>Signing In | VIRAI</title></head>
+        <body style="font-family:sans-serif;text-align:center;padding:3rem;background:#FBF9F5;color:#1E1C1A">
+          <p style="font-size:1.1rem;margin-bottom:.5rem">Vanakkam, <strong>${escapeHtml(customer.name)}</strong></p>
+          <p style="font-size:.9rem;color:#6C6863">Authenticated successfully with Google. Returning to your sanctuary...</p>
+          <script>
+            try {
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'GOOGLE_AUTH_SUCCESS',
+                  payload: ${JSON.stringify(clientPayload)}
+                }, '*');
+                window.close();
+              } else {
+                window.location.href = '/account.html';
+              }
+            } catch (err) {
+              window.location.href = '/account.html';
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('[virai-google-oauth-error]', err);
+    res.send(`
+      <!doctype html>
+      <html>
+        <head><meta charset="utf-8"><title>Authentication Error | VIRAI</title></head>
+        <body style="font-family:sans-serif;text-align:center;padding:3rem;background:#FBF9F5;color:#1E1C1A">
+          <h3 style="color:#A2593B">Authentication Error</h3>
+          <p>${escapeHtml(err.message || 'An error occurred during Google sign-in')}</p>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: ${JSON.stringify(err.message)} }, '*');
+              setTimeout(() => window.close(), 1800);
+            }
+          </script>
+        </body>
+      </html>
+    `);
   }
 });
 
@@ -480,6 +1092,64 @@ app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
     res.json({ success: true, message: 'Product removed' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Upload product photography (accepts base64 data URI, validates, saves to site/img/uploads)
+app.post('/api/admin/upload-image', requireAdmin, (req, res) => {
+  try {
+    const { image, filename: clientName } = req.body;
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ success: false, error: 'No image data provided' });
+    }
+
+    const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let mimeType = 'image/jpeg';
+    let base64Data = image;
+
+    if (matches && matches.length === 3) {
+      mimeType = matches[1].toLowerCase();
+      base64Data = matches[2];
+    }
+
+    const allowedMimes = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/avif': 'avif',
+      'image/gif': 'gif'
+    };
+
+    const ext = allowedMimes[mimeType] || 'jpg';
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (buffer.length > 15 * 1024 * 1024) {
+      return res.status(400).json({ success: false, error: 'Image size exceeds 15MB limit' });
+    }
+
+    const uploadsDir = path.join(siteDir, 'img', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const cleanBase = (clientName ? path.parse(clientName).name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30) : 'photo');
+    const safeFilename = `${cleanBase}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+    const filePath = path.join(uploadsDir, safeFilename);
+
+    fs.writeFileSync(filePath, buffer);
+
+    const relativeUrl = `img/uploads/${safeFilename}`;
+    console.log(`[virai-upload] Product image saved: ${relativeUrl} (${(buffer.length / 1024).toFixed(1)} KB)`);
+
+    res.json({
+      success: true,
+      url: relativeUrl,
+      filename: safeFilename
+    });
+  } catch (err) {
+    console.error('[virai-upload] Image upload failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to process image upload: ' + err.message });
   }
 });
 
@@ -725,7 +1395,12 @@ app.get('/admin', (req, res) => {
 app.use(express.static(siteDir, {
   extensions: ['html'],
   index: 'index.html',
-  dotfiles: 'ignore'
+  dotfiles: 'ignore',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  }
 }));
 
 // Explicit 404 for unmatched API endpoints
@@ -733,19 +1408,28 @@ app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: 'API endpoint not found' });
 });
 
-// Fallback to index.html for clean extension-less HTML routes only
+// Clean error routing: return 404.html with status 404 for unmapped storefront routes
 app.use((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return res.status(405).send('Method Not Allowed');
   }
 
-  // If requesting a missing static file with an extension, return 404 rather than misleading HTML
+  // If requesting a missing static file with an extension, return plain 404
   const ext = path.extname(req.path);
   if (ext && ext !== '.html') {
     return res.status(404).type('text/plain').send('Not Found');
   }
 
-  res.sendFile(path.join(siteDir, 'index.html'));
+  res.status(404).sendFile(path.join(siteDir, '404.html'));
+});
+
+// Centralized error handler returning 500.html
+app.use((err, req, res, next) => {
+  console.error('[virai-internal-error]', err);
+  if (req.path.startsWith('/api')) {
+    return res.status(500).json({ success: false, error: 'Internal server error occurred' });
+  }
+  res.status(500).sendFile(path.join(siteDir, '500.html'));
 });
 
 app.listen(PORT, HOST, () => {

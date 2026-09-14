@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "collections": {
+    "system_health": {
+      "description": "System operational heartbeats and diagnostics",
+      "document": {
+        "title": "SystemHealthRecord",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "timestamp": { "type": "string" }
+        },
+        "required": ["status", "timestamp"]
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.resource.data.keys().hasAll(['status', 'timestamp'])",
+        "update": "request.resource.data.keys().hasAll(['status', 'timestamp'])",
+        "delete": "false"
+      }
+    },
+    "orders": {
+      "description": "Commercial orders placed by patrons",
+      "document": {
+        "title": "Order",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "items": { "type": "array" },
+          "subtotal": { "type": "number" },
+          "total": { "type": "number" },
+          "status": { "type": "string" },
+          "contact": { "type": "object" },
+          "paymentMethod": { "type": "string" },
+          "paymentStatus": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "items", "total", "status", "contact", "createdAt"]
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.resource.data.keys().hasAll(['id', 'items', 'total', 'status', 'contact', 'createdAt'])",
+        "update": "false",
+        "delete": "false"
+      }
+    },
+    "customers": {
+      "description": "Patron profiles and hashed account credentials",
+      "document": {
+        "title": "Customer",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "email", "createdAt"]
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.resource.data.keys().hasAll(['id', 'email', 'createdAt'])",
+        "update": "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'savedAddresses', 'updatedAt', 'hash', 'salt'])",
+        "delete": "false"
+      }
+    },
+    "reviews": {
+      "description": "Customer olfactory reflections and reviews",
+      "document": {
+        "title": "Review",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "productId": { "type": "string" },
+          "name": { "type": "string" },
+          "rating": { "type": "number" },
+          "comment": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "productId", "name", "rating", "comment", "createdAt"]
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.resource.data.keys().hasAll(['id', 'productId', 'name', 'rating', 'comment', 'createdAt'])",
+        "update": "false",
+        "delete": "false"
+      }
+    }
+  }
+}

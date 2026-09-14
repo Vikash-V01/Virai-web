@@ -175,6 +175,170 @@ h3{font-size:clamp(1.25rem,2vw,1.6rem)}
 .hero-media picture,.hero-media img{display:block;width:100%;height:100%}
 .hero-media img{object-fit:cover;transform:scale(1.08);animation:hero-in 2.4s var(--ease) both;will-change:transform}
 @keyframes hero-in{from{opacity:.35;transform:scale(1.14)}to{opacity:1;transform:scale(1.08)}}
+
+/* ============================================================ */
+/* PHOTOREALISTIC MOVING MOUNTAIN CLOUDS (HERO BANNER) */
+/* ============================================================ */
+.hero-clouds {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+  /* Both top and bottom feather gracefully to prevent any artificial cutoff lines */
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 10%, rgba(0,0,0,1) 22%, rgba(0,0,0,1) 68%, rgba(0,0,0,0.4) 86%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 10%, rgba(0,0,0,1) 22%, rgba(0,0,0,1) 68%, rgba(0,0,0,0.4) 86%, rgba(0,0,0,0) 100%);
+}
+
+.cloud-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  display: flex;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.cloud-cluster {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.cloud-img {
+  position: absolute;
+  display: block;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+/* Layer 1: High Mountain Sky (Deep background, very slow serene glide) */
+.layer-deep {
+  z-index: 1;
+  animation: cloudDriftDeep 280s linear infinite;
+}
+.c-deep-1 {
+  top: 2%;
+  left: 4%;
+  width: clamp(480px, 42vw, 860px);
+  opacity: 0.62;
+  filter: blur(2px);
+  animation: cloudBobA 42s ease-in-out infinite alternate;
+}
+.c-deep-2 {
+  top: 6%;
+  left: 52%;
+  width: clamp(520px, 46vw, 980px);
+  opacity: 0.58;
+  filter: blur(1.5px);
+  animation: cloudBobB 48s ease-in-out infinite alternate;
+}
+
+/* Layer 2: Main Prominent Fluffy Cumulus (Realistic, gentle, calm drift) */
+.layer-main {
+  z-index: 2;
+  animation: cloudDriftMain 200s linear infinite;
+}
+.c-main-1 {
+  top: 3%;
+  left: 14%;
+  width: clamp(560px, 48vw, 1020px);
+  opacity: 0.76;
+  animation: cloudBobB 44s ease-in-out infinite alternate;
+}
+.c-main-2 {
+  top: 7%;
+  left: 64%;
+  width: clamp(540px, 45vw, 960px);
+  opacity: 0.72;
+  animation: cloudBobA 46s ease-in-out infinite alternate;
+}
+
+/* Layer 3: Mountain Ridge Flow (Lower altitude, soft breeze) */
+.layer-ridge {
+  z-index: 3;
+  animation: cloudDriftRidge 140s linear infinite;
+}
+.c-ridge-1 {
+  top: 14%;
+  left: 2%;
+  width: clamp(600px, 52vw, 1100px);
+  opacity: 0.65;
+  animation: cloudBobC 38s ease-in-out infinite alternate;
+}
+.c-ridge-2 {
+  top: 11%;
+  left: 56%;
+  width: clamp(500px, 42vw, 880px);
+  opacity: 0.60;
+  animation: cloudBobA 42s ease-in-out infinite alternate;
+}
+
+/* Atmospheric Sunlit Sheen */
+.cloud-sunlight-haze {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 72% 52% at 48% 18%, rgba(255, 250, 240, 0.16) 0%, rgba(246, 236, 218, 0.06) 52%, transparent 82%);
+  animation: cloudHazePulse 24s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes cloudDriftDeep {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes cloudDriftMain {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes cloudDriftRidge {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes cloudBobA {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.01); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
+@keyframes cloudBobB {
+  0% { transform: translateY(-3px) scale(1.008); }
+  50% { transform: translateY(5px) scale(0.992); }
+  100% { transform: translateY(-3px) scale(1.008); }
+}
+
+@keyframes cloudBobC {
+  0% { transform: translateY(3px) scale(0.995); }
+  50% { transform: translateY(-4px) scale(1.01); }
+  100% { transform: translateY(3px) scale(0.995); }
+}
+
+@keyframes cloudHazePulse {
+  0% { opacity: 0.45; }
+  50% { opacity: 0.75; }
+  100% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud-layer, .cloud-img, .cloud-sunlight-haze {
+    animation: none !important;
+  }
+}
+
 .hero-scrim{
   position:absolute;inset:0;pointer-events:none;
   background:
@@ -233,6 +397,199 @@ h3{font-size:clamp(1.25rem,2vw,1.6rem)}
 
 .intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,6rem);align-items:end}
 .intro-mark{font-family:var(--tamil);font-size:clamp(4rem,8vw,6.5rem);color:var(--palai);opacity:.35;line-height:1}
+
+/* ============================================================
+   VERTICAL PARALLAX: CANDLE LIGHTING SYSTEM
+   Stationary candle stage that lights on scroll
+   ============================================================ */
+.candle-parallax-section {
+  position: relative;
+  padding: clamp(4.5rem, 8vw, 7.5rem) 0;
+}
+
+.candle-parallax-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: start;
+}
+
+.candle-story-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.5rem, 7vh, 5.5rem);
+  padding-bottom: clamp(3rem, 6vh, 6rem);
+}
+
+.candle-story-block {
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+.candle-story-block.block-intro {
+  padding-bottom: 1rem;
+}
+
+.candle-story-block.block-step {
+  padding: 2.2rem 2.2rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px -8px rgba(24, 21, 17, 0.05);
+  transition: border-color 0.4s var(--ease), background 0.4s var(--ease), transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.candle-story-block.block-step.is-active {
+  border-color: var(--palai);
+  background: #FFFDF9;
+  transform: translateX(6px);
+  box-shadow: 0 10px 30px -10px rgba(162, 89, 59, 0.15);
+}
+
+.candle-step-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mineral);
+  margin-bottom: 0.85rem;
+  transition: color 0.3s var(--ease);
+}
+
+.candle-story-block.block-step.is-active .candle-step-pill {
+  color: var(--palai);
+  font-weight: 500;
+}
+
+.candle-step-h {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 0.65rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.candle-step-p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--mineral);
+  transition: color 0.3s var(--ease);
+}
+
+.candle-story-block.block-step.is-active .candle-step-p {
+  color: var(--ink-soft);
+}
+
+/* Sticky Stationary Candle Column */
+.candle-sticky-col {
+  position: sticky;
+  top: clamp(4rem, 12vh, 7.5rem);
+  align-self: start;
+}
+
+.candle-stage-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.candle-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1086 / 1448;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #EDEAE3;
+  box-shadow: 0 24px 60px -15px rgba(24, 21, 17, 0.14),
+              0 0 50px -10px rgba(230, 140, 50, calc(var(--candle-lit-opacity, 0) * 0.28));
+  --candle-progress: 0;
+  --candle-halflit-opacity: 0;
+  --candle-lit-opacity: 0;
+  user-select: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.candle-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.candle-unlit {
+  z-index: 1;
+}
+
+.candle-halflit {
+  z-index: 2;
+  opacity: var(--candle-halflit-opacity, 0);
+  will-change: opacity;
+}
+
+.candle-lit {
+  z-index: 3;
+  opacity: var(--candle-lit-opacity, 0);
+  will-change: opacity;
+}
+
+/* Subtle Organic Warmth Glow around lit vessel */
+.candle-ambient-bloom {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--candle-progress, 0) * 0.35);
+  background: radial-gradient(circle 420px at 50% 48%, rgba(255, 195, 110, 0.4) 0%, rgba(230, 130, 40, 0.12) 55%, transparent 80%);
+}
+
+/* Hairline Progress Track */
+.candle-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  z-index: 6;
+}
+
+.candle-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--mineral), var(--palai));
+  transition: width 0.04s linear;
+}
+
+.candle-caption {
+  font-size: 0.76rem;
+  color: var(--mineral);
+  text-align: right;
+  padding-top: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 880px) {
+  .candle-parallax-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .candle-sticky-col {
+    position: sticky;
+    top: 68px;
+    z-index: 10;
+    margin-bottom: 1.5rem;
+  }
+  .candle-stage-wrapper {
+    max-width: 320px;
+  }
+  .candle-story-block.block-step.is-active {
+    transform: none;
+  }
+}
 
 .landscape-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
 .land-card{
@@ -691,6 +1048,128 @@ label.f-label{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:
 .ship-opt:has(input:checked){border-color:var(--ink)}
 .ship-opt input{accent-color:var(--ink)}
 .pay-note{border:1px dashed var(--line);border-radius:2px;padding:1rem 1.2rem;font-size:.8rem;color:var(--mineral);margin-top:1.2rem}
+
+/* Checkout Terms & Conditions Box & Inline Modal */
+.terms-preview-box {
+  height: 140px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: .85rem 1rem;
+  font-size: .82rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  border-radius: 3px;
+  margin-bottom: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.terms-preview-box::-webkit-scrollbar {
+  width: 6px;
+}
+.terms-preview-box::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+.terms-preview-box p {
+  margin-bottom: .55rem;
+}
+.terms-preview-box p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.62);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s var(--ease), visibility .3s;
+}
+.legal-modal-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+}
+.legal-modal-card {
+  background: var(--rice);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px -12px rgba(28, 25, 23, 0.35);
+  transform: translateY(12px) scale(0.98);
+  transition: transform .3s var(--ease);
+}
+.legal-modal-backdrop.open .legal-modal-card {
+  transform: translateY(0) scale(1);
+}
+.legal-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.legal-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--mineral);
+  cursor: pointer;
+  padding: .2rem .5rem;
+  border-radius: 2px;
+  transition: color .2s;
+}
+.legal-modal-close:hover {
+  color: var(--ink);
+}
+.legal-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.4rem;
+  font-size: .88rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  scrollbar-width: thin;
+}
+.legal-modal-body h4 {
+  font-size: .95rem;
+  color: var(--ink);
+  margin: 1.2rem 0 .3rem;
+  font-weight: 600;
+}
+.legal-modal-body h4:first-child {
+  margin-top: 0;
+}
+.legal-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: .8rem;
+  padding: 1rem 1.4rem;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.custom-chk-label:hover {
+  color: var(--ink);
+}
+.terms-row-highlight {
+  background: rgba(162, 89, 59, 0.08);
+  border: 1px solid rgba(162, 89, 59, 0.3);
+  padding: .4rem .6rem;
+  border-radius: 3px;
+}
 .confirm-hero{text-align:center;padding:clamp(4.5rem,9vw,7.5rem) 0 clamp(2rem,4vw,3rem)}
 .order-no{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--mineral)}
 .confirm-next{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:3.5rem 0 5rem}
@@ -758,9 +1237,41 @@ label.f-label{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:
 .foot-news input{
   flex:1;background:transparent;border:none;border-bottom:1px solid #57503F;
   color:var(--smoke);padding:.6rem 0;font-size:.9rem;min-width:0;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .foot-news input::placeholder{color:#7A7263}
 .foot-news input:focus{outline:none;border-color:var(--smoke)}
+
+/* Prevent Chrome/Safari/Edge light-blue autofill on the dark footer input */
+.foot-news input:-webkit-autofill,
+.foot-news input:-webkit-autofill:hover,
+.foot-news input:-webkit-autofill:focus,
+.foot-news input:-webkit-autofill:active,
+.foot-news input:-internal-autofill-selected {
+  -webkit-box-shadow: 0 0 0 1000px #23201b inset !important;
+  box-shadow: 0 0 0 1000px #23201b inset !important;
+  -webkit-text-fill-color: #f7f5ee !important;
+  color: #f7f5ee !important;
+  border-bottom: 1px solid #7A7263 !important;
+  caret-color: #f7f5ee !important;
+  font-family: inherit !important;
+  font-size: .9rem !important;
+  transition: background-color 50000s ease-in-out 0s !important;
+}
+
+/* General autofill styling for all other light forms */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #fbf8f2 inset !important;
+  box-shadow: 0 0 0 1000px #fbf8f2 inset !important;
+  -webkit-text-fill-color: #23201b !important;
+  color: #23201b !important;
+  caret-color: #23201b !important;
+  transition: background-color 50000s ease-in-out 0s !important;
+}
 .foot-col h4{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:#7A7263;font-weight:500;margin-bottom:1rem}
 .foot-col a{display:block;font-size:.86rem;color:#C9C2B4;padding:.28rem 0;transition:color .3s}
 .foot-col a:hover{color:var(--rice)}
@@ -1194,4 +1705,29 @@ label.f-label{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:
   }
   .vr-motion .vr-canlit img{filter:none!important}
   .vr-motion .vr-lines-ready .vr-line>span{opacity:1!important;transform:none!important;filter:none!important;transition:none!important}
+  #viraiCursorCanvas{display:none!important}
+}
+
+/* ============================================================
+   VIRAI SCENT TRAIL
+   Normal native pointer with an ethereal, warm scent trail.
+   Hardware-accelerated canvas simulation with warm brand palette.
+   ============================================================ */
+
+/* Scent Trail Canvas (draws behind the normal pointer) */
+#viraiCursorCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+/* Mobile/tablet & accessibility: completely disabled */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  #viraiCursorCanvas {
+    display: none !important;
+  }
 }

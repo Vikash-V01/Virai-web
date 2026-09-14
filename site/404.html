@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 &middot; Page Not Found | VIRAI</title>
+<meta name="description" content="The fragrance page you are looking for has evaporated or moved.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+<style>
+.error-hero {
+  min-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1.5rem;
+}
+.error-code {
+  font-family: var(--serif);
+  font-size: clamp(4rem, 10vw, 7.5rem);
+  line-height: 1;
+  color: var(--mineral);
+  opacity: 0.45;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.04em;
+}
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2rem;
+}
+</style>
+</head>
+<body data-page="404">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-main">
+    <button class="burger" aria-expanded="false" aria-label="Open menu" aria-controls="mmenu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="head-nav head-left" aria-label="Primary">
+      <div class="has-sub">
+        <a href="shop.html">Shop</a>
+        <div class="sub">
+          <a href="shop.html">All Products</a>
+          <a href="shop.html?type=Candle">Candles</a>
+          <a href="shop.html?type=Set">Gift Sets</a>
+          <a href="shop.html?family=floral">By Fragrance</a>
+        </div>
+      </div>
+      <div class="has-sub">
+        <a href="ainthinai.html">Ainthinai</a>
+        <div class="sub">
+          <a href="ainthinai.html">Collection 01 - Overview</a>
+          <a href="landscape.html?id=kurinji">Kurinji · Union</a>
+          <a href="landscape.html?id=mullai">Mullai · Waiting</a>
+          <a href="landscape.html?id=marutham">Marutham · Playful Conflict</a>
+          <a href="landscape.html?id=neithal">Neithal · Longing</a>
+          <a href="landscape.html?id=palai">Palai · Separation</a>
+        </div>
+      </div>
+    </nav>
+    <a class="brand-mark" href="index.html" aria-label="Virai - home">
+      <img class="logo-img" src="img/virai-logo.webp" alt="Virai">
+    </a>
+    <nav class="head-nav head-right" aria-label="Secondary">
+      <a class="icon-btn" href="search.html">Search</a>
+      <a class="icon-btn" href="account.html">Account</a>
+      <button class="icon-btn" data-open-bag>Bag <span class="bag-count">0</span></button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="error-hero wrap">
+    <span class="error-code">404</span>
+    <p class="tamil" style="font-size:1.4rem;color:var(--marutham);margin-bottom:.5rem">Oops</p>
+    <h1 style="font-size:clamp(1.8rem,3.2vw,2.5rem);margin-bottom:.8rem">A note that dissolved into air.</h1>
+    <p class="lede" style="max-width:52ch">The path you followed does not lead to an existing chamber or botanical study. It may have been relocated or extinguished.</p>
+    <div class="error-actions">
+      <a href="shop.html" class="btn btn-solid">Browse Collection</a>
+      <a href="index.html" class="btn btn-line">Return Home</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" data-modular-footer id="site-footer"></footer>
+<script src="js/data.js"></script>
+<script src="js/footer.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

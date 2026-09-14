@@ -50,22 +50,28 @@
         ]
       },
       {
-        title: 'Care',
+        title: 'Care & Legal',
         links: [
+          { label: 'Customer Account', url: 'account.html' },
           { label: 'Contact', url: 'contact.html' },
           { label: 'FAQs', url: 'faq.html' },
           { label: 'Shipping', url: 'shipping.html' },
           { label: 'Returns', url: 'returns.html' },
-          { label: 'Product Care', url: 'care.html' }
+          { label: 'Product Care', url: 'care.html' },
+          { label: 'Terms of Service', url: 'terms.html' },
+          { label: 'Privacy & Data Rights', url: 'privacy.html' },
+          { label: 'Security & Disclosure', url: 'security.html' },
+          { label: 'Accessibility', url: 'accessibility.html' },
+          { label: 'Cookie Preferences', url: 'javascript:void(0)', onclick: 'window.openViraiConsentPreferences && window.openViraiConsentPreferences()' }
         ]
       }
     ],
     base: {
       copyrightText: 'Virai - Luxury Gifting, Rooted in Fragrance',
       adminLink: {
-        enabled: true,
-        label: 'Admin Portal',
-        url: 'admin.html'
+        enabled: false,
+        label: '',
+        url: ''
       },
       tamilTagline: 'Virai - Lingering Impressions'
     }
@@ -108,8 +114,8 @@
       '<div class="foot-news">' +
         '<h3>' + esc(news.heading) + '</h3>' +
         '<p>' + esc(news.description) + '</p>' +
-        '<form data-form="newsletter" novalidate>' +
-          '<input type="email" required placeholder="' + esc(news.placeholder) + '" aria-label="' + esc(news.placeholder) + '">' +
+        '<form data-form="newsletter" novalidate autocomplete="on">' +
+          '<input type="email" name="email" autocomplete="email" spellcheck="false" required placeholder="' + esc(news.placeholder) + '" aria-label="' + esc(news.placeholder) + '">' +
           '<button class="btn btn-line" type="submit" style="border-color:#57503F;color:var(--smoke)">' + esc(news.buttonText) + '</button>' +
         '</form>' +
       '</div>';
@@ -117,7 +123,8 @@
     // Navigation columns HTML
     var colsHtml = cfg.columns.map(function (col) {
       var linksHtml = col.links.map(function (lnk) {
-        return '<a href="' + esc(lnk.url) + '">' + esc(lnk.label) + '</a>';
+        var onclickAttr = lnk.onclick ? ' onclick="' + esc(lnk.onclick) + '"' : '';
+        return '<a href="' + esc(lnk.url) + '"' + onclickAttr + '>' + esc(lnk.label) + '</a>';
       }).join('');
       return '<div class="foot-col"><h4>' + esc(col.title) + '</h4>' + linksHtml + '</div>';
     }).join('');

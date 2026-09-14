@@ -247,7 +247,7 @@
 
     var lines = "";
     if(c.items.length === 0){
-      lines = '<div class="drawer-empty"><p>Your bag is empty.</p><p style="margin-top:.6rem;font-size:.85rem">Every Virai object begins with a feeling.</p><a class="btn btn-line" style="margin-top:1.4rem" href="shop.html">Shop Fragrance</a></div>';
+      lines = '<div class="drawer-empty"><p>Your bag is empty.</p><p style="margin-top:.6rem;font-size:.85rem">Every Virai object begins with a feeling.</p><a class="btn btn-line" style="margin-top:1.4rem" href="shop.html">Explore Our Collection</a></div>';
     } else {
       c.items.forEach(function(item, idx){
         var p = VIRAI.productById(item.id);
@@ -603,6 +603,193 @@
       requestAnimationFrame(frame);
     }, { passive:true });
     frame();
+
+    try{ initHeroClouds(); }catch(e){ console.error("[virai] initHeroClouds error:", e); }
+  }
+
+  // --- Atmospheric Mountain Sky Clouds: Layer depth parallax & lifecycle manager ---
+  function initHeroClouds(){
+    var hero = document.querySelector(".hero");
+    var heroClouds = document.getElementById("heroClouds");
+    if(!hero || !heroClouds) return;
+
+    var layerDeep = heroClouds.querySelector(".layer-deep");
+    var layerMain = heroClouds.querySelector(".layer-main");
+    var layerRidge = heroClouds.querySelector(".layer-ridge");
+
+    if(!layerDeep && !layerMain && !layerRidge) return;
+
+    // Interactive mouse perspective drift
+    if(MOTION){
+      var targetX = 0, targetY = 0;
+      var curX = 0, curY = 0;
+      var ticking = false;
+
+      hero.addEventListener("mousemove", function(e){
+        var rect = hero.getBoundingClientRect();
+        var normX = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+        var normY = (e.clientY - rect.top) / rect.height - 0.5;
+        targetX = normX * 36;
+        targetY = normY * 16;
+        if(!ticking){
+          ticking = true;
+          requestAnimationFrame(updateParallax);
+        }
+      }, { passive: true });
+
+      hero.addEventListener("mouseleave", function(){
+        targetX = 0;
+        targetY = 0;
+      });
+
+      function updateParallax(){
+        curX += (targetX - curX) * 0.06;
+        curY += (targetY - curY) * 0.06;
+
+        if(layerDeep) layerDeep.style.marginLeft = (curX * 0.35).toFixed(1) + "px";
+        if(layerMain) layerMain.style.marginLeft = (curX * 0.7).toFixed(1) + "px";
+        if(layerRidge) layerRidge.style.marginLeft = (curX * 1.1).toFixed(1) + "px";
+
+        if(Math.abs(targetX - curX) > 0.05 || Math.abs(targetY - curY) > 0.05){
+          requestAnimationFrame(updateParallax);
+        } else {
+          ticking = false;
+        }
+      }
+    }
+
+    // Performance optimization: Pause cloud animations when hero is scrolled out of viewport
+    if("IntersectionObserver" in window){
+      var observer = new IntersectionObserver(function(entries){
+        var inView = entries[0].isIntersecting;
+        heroClouds.style.animationPlayState = inView ? "running" : "paused";
+        var layers = heroClouds.querySelectorAll(".cloud-layer, .cloud-img, .cloud-sunlight-haze");
+        layers.forEach(function(el){
+          el.style.animationPlayState = inView ? "running" : "paused";
+        });
+      }, { threshold: 0.05 });
+      observer.observe(hero);
+    }
+  }
+
+  // --- Vertical Parallax: Stationary Candle Lighting on Scroll ---
+  function initCandleParallax(){
+    var section = document.getElementById("candleParallaxSection");
+    var stage = document.getElementById("candleStage");
+    if(!section || !stage) return;
+
+    var progressBar = document.getElementById("candleProgressBar");
+    var steps = section.querySelectorAll(".candle-story-block.block-step");
+
+    var currentProgress = 0;
+    var targetProgress = 0;
+    var ticking = false;
+
+    function smoothstep(min, max, value){
+      var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      return x * x * (3 - 2 * x);
+    }
+
+    function calculateTarget(){
+      var rect = section.getBoundingClientRect();
+      var vh = window.innerHeight || 800;
+
+      // Section starts triggering when its top reaches 65% of the viewport height
+      var triggerStart = vh * 0.65;
+      // Section lighting completes as you scroll through the storytelling track
+      var totalTravel = rect.height - (vh * 0.45);
+      if(totalTravel <= 0) totalTravel = rect.height;
+
+      var travelScrolled = triggerStart - rect.top;
+      var rawP = travelScrolled / totalTravel;
+      return Math.max(0, Math.min(1, rawP));
+    }
+
+    function applyProgress(p){
+      // 3-Stage Real Photographic Crossfade:
+      // Stage 1 (0.0 -> 0.5): unlit -> halflit (spark catching)
+      // Stage 2 (0.45 -> 0.95): halflit -> lit (radiant flame & ambient glow)
+      var halflitOpacity = (p <= 0.5) ? smoothstep(0, 0.5, p) : 1;
+      var litOpacity = (p > 0.45) ? smoothstep(0.45, 0.95, p) : 0;
+
+      stage.style.setProperty("--candle-progress", p.toFixed(3));
+      stage.style.setProperty("--candle-halflit-opacity", halflitOpacity.toFixed(3));
+      stage.style.setProperty("--candle-lit-opacity", litOpacity.toFixed(3));
+
+      // Progress bar
+      if(progressBar){
+        progressBar.style.width = (p * 100).toFixed(1) + "%";
+      }
+
+      // Step highlights
+      var activeStep = 1;
+      if(p >= 0.70){
+        activeStep = 3;
+      } else if(p >= 0.35){
+        activeStep = 2;
+      } else {
+        activeStep = 1;
+      }
+
+      steps.forEach(function(stepEl){
+        var s = parseInt(stepEl.getAttribute("data-step"), 10);
+        if(s === activeStep){
+          stepEl.classList.add("is-active");
+        } else {
+          stepEl.classList.remove("is-active");
+        }
+      });
+    }
+
+    function updateLoop(){
+      var diff = targetProgress - currentProgress;
+      if(Math.abs(diff) > 0.001){
+        currentProgress += diff * 0.2;
+        applyProgress(currentProgress);
+        requestAnimationFrame(updateLoop);
+      } else {
+        currentProgress = targetProgress;
+        applyProgress(currentProgress);
+        ticking = false;
+      }
+    }
+
+    function onScroll(){
+      targetProgress = calculateTarget();
+      if(!ticking){
+        ticking = true;
+        requestAnimationFrame(updateLoop);
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function(){
+      targetProgress = calculateTarget();
+      currentProgress = targetProgress;
+      applyProgress(currentProgress);
+    }, { passive: true });
+
+    // Initial calculation
+    targetProgress = calculateTarget();
+    currentProgress = targetProgress;
+    applyProgress(currentProgress);
+
+    // Click/tap interaction: smoothly scroll to next state
+    stage.style.cursor = "pointer";
+    stage.addEventListener("click", function(){
+      var nextStep = 1;
+      if(currentProgress < 0.35){
+        nextStep = 2;
+      } else if(currentProgress < 0.70){
+        nextStep = 3;
+      } else {
+        nextStep = 1;
+      }
+      var targetEl = section.querySelector('.block-step[data-step="' + nextStep + '"]');
+      if(targetEl){
+        targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
   }
 
   // --- Page transitions: leave through a soft veil, arrive the same way ---
@@ -1024,6 +1211,279 @@
   if(window.VIRAI) window.VIRAI.initSelects = initViraiSelects;
   window.initViraiSelects = initViraiSelects;
 
+  // --- VIRAI Natural Pointer with Ambient Scent Trail ---
+  // Keeps the native browser pointer intact while rendering an ethereal,
+  // atmospheric fragrance trail (warm incense smoke wisps & golden amber dust)
+  // that follows pointer motion smoothly with zero freeze or GPU lag.
+  function initScentCursor(){
+    if(typeof window === "undefined" || !window.matchMedia) return;
+
+    var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if(prefersReduced || !isFinePointer) return;
+
+    // Completely disabled on mobile and touch devices
+    if("ontouchstart" in window || (navigator.maxTouchPoints > 0 && !isFinePointer)){
+      return;
+    }
+
+    var canvas = document.createElement("canvas");
+    canvas.id = "viraiCursorCanvas";
+    canvas.setAttribute("aria-hidden", "true");
+    document.body.appendChild(canvas);
+
+    var ctx = canvas.getContext("2d", { alpha: true });
+    if(!ctx) return;
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    function resize(){
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      if(ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    // Pre-render high-performance particle sprites (zero GPU stalls, zero GC pauses)
+    var vaporSprite = document.createElement("canvas");
+    vaporSprite.width = 64;
+    vaporSprite.height = 64;
+    var vctx = vaporSprite.getContext("2d");
+    if(vctx){
+      var vg = vctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      vg.addColorStop(0, "rgba(255, 238, 195, 0.45)");
+      vg.addColorStop(0.35, "rgba(245, 218, 175, 0.28)");
+      vg.addColorStop(0.70, "rgba(230, 210, 185, 0.12)");
+      vg.addColorStop(1, "rgba(230, 210, 185, 0)");
+      vctx.fillStyle = vg;
+      vctx.beginPath();
+      vctx.arc(32, 32, 32, 0, Math.PI * 2);
+      vctx.fill();
+    }
+
+    var sparkSprite = document.createElement("canvas");
+    sparkSprite.width = 32;
+    sparkSprite.height = 32;
+    var sctx = sparkSprite.getContext("2d");
+    if(sctx){
+      var sg = sctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      sg.addColorStop(0, "rgba(255, 252, 235, 0.95)");
+      sg.addColorStop(0.40, "rgba(250, 180, 55, 0.70)");
+      sg.addColorStop(0.75, "rgba(220, 120, 25, 0.25)");
+      sg.addColorStop(1, "rgba(220, 120, 25, 0)");
+      sctx.fillStyle = sg;
+      sctx.beginPath();
+      sctx.arc(16, 16, 16, 0, Math.PI * 2);
+      sctx.fill();
+    }
+
+    var lastMouseX = -100;
+    var lastMouseY = -100;
+    var hasMovedOnce = false;
+    var isHover = false;
+
+    // Particles: Scent Wisps (soft diffuse vapor) & Golden Micro-Dust
+    var particles = [];
+    var MAX_PARTICLES = 50;
+
+    var lastFrameTime = performance.now();
+    var rafId = null;
+    var isTicking = false;
+
+    function addScentParticle(x, y, vx, vy, speed, isHoverActive){
+      if(particles.length >= MAX_PARTICLES) return;
+
+      var angle = Math.atan2(vy, vx) + Math.PI; // opposite to movement direction
+      var spread = (Math.random() - 0.5) * 0.9;
+      var dir = angle + spread;
+      var driftSpeed = 0.35 + Math.random() * 0.55;
+
+      // 1. Aromatic Incense Smoke Wisp (soft, warm diffusion)
+      particles.push({
+        type: "vapor",
+        x: x + (Math.random() - 0.5) * 4,
+        y: y + (Math.random() - 0.5) * 4,
+        vx: Math.cos(dir) * driftSpeed * 0.4 + (Math.random() - 0.5) * 0.2,
+        vy: Math.sin(dir) * driftSpeed * 0.4 - 0.35 - Math.random() * 0.25, // gentle upward thermal lift
+        radius: 4 + Math.random() * 3,
+        maxRadius: 18 + Math.random() * 10 + (isHoverActive ? 6 : 0),
+        life: 0,
+        maxLife: 550 + Math.random() * 250,
+        alpha: (0.28 + Math.min(0.20, speed * 0.008)) * (isHoverActive ? 1.25 : 1.0)
+      });
+
+      // 2. Delicate Fragrance Ember / Golden Pollen Sparkle
+      if((Math.random() < 0.55 || isHoverActive) && particles.length < MAX_PARTICLES){
+        particles.push({
+          type: "spark",
+          x: x + (Math.random() - 0.5) * 6,
+          y: y + (Math.random() - 0.5) * 6,
+          vx: Math.cos(dir) * driftSpeed * 0.6 + (Math.random() - 0.5) * 0.35,
+          vy: Math.sin(dir) * driftSpeed * 0.6 - 0.45 - Math.random() * 0.35,
+          radius: 1.2 + Math.random() * 1.4,
+          life: 0,
+          maxLife: 400 + Math.random() * 220,
+          alpha: 0.8 + Math.random() * 0.2,
+          driftPhase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function onPointerMove(e){
+      if(!e) return;
+      var clientX = e.clientX;
+      var clientY = e.clientY;
+      if(clientX === lastMouseX && clientY === lastMouseY) return;
+
+      if(!hasMovedOnce){
+        hasMovedOnce = true;
+        lastMouseX = clientX;
+        lastMouseY = clientY;
+      }
+
+      var dx = clientX - lastMouseX;
+      var dy = clientY - lastMouseY;
+      var dist = Math.hypot(dx, dy);
+
+      var target = e.target;
+      if(target){
+        var hoverable = target.closest && target.closest("a, button, [role='button'], input, select, textarea, summary, label, .pcard, .product-card, .clickable, .tag, [data-open-bag]");
+        isHover = !!hoverable;
+      }
+
+      // Interpolate along movement vector for an uninterrupted, velvety scent flow
+      if(dist > 1.5){
+        var steps = Math.min(6, Math.max(1, Math.floor(dist / 12)));
+        for(var s = 1; s <= steps; s++){
+          var frac = s / steps;
+          var interX = lastMouseX + dx * frac;
+          var interY = lastMouseY + dy * frac;
+          addScentParticle(interX, interY, dx, dy, dist, isHover);
+        }
+      }
+
+      lastMouseX = clientX;
+      lastMouseY = clientY;
+
+      if(!isTicking){
+        isTicking = true;
+        lastFrameTime = performance.now();
+        rafId = requestAnimationFrame(renderLoop);
+      }
+    }
+
+    function renderLoop(now){
+      try {
+        var dt = Math.max(1, Math.min(50, now - lastFrameTime));
+        lastFrameTime = now;
+
+        // Clear previous canvas frame
+        ctx.clearRect(0, 0, width, height);
+
+        // --- Update and Render Scent Particles ---
+        for(var i = particles.length - 1; i >= 0; i--){
+          var p = particles[i];
+          p.life += dt;
+          var progress = p.life / p.maxLife;
+
+          if(progress >= 1 || isNaN(progress)){
+            particles.splice(i, 1);
+            continue;
+          }
+
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.96; // atmospheric air friction
+          p.vy *= 0.96;
+
+          if(!isFinite(p.x) || !isFinite(p.y)){
+            particles.splice(i, 1);
+            continue;
+          }
+
+          // Smooth mathematical ease-out expansion without NaN risks
+          var easeProgress = Math.sin(Math.max(0, Math.min(1, progress)) * 1.5707963);
+
+          if(p.type === "vapor"){
+            var r = Math.max(1, p.radius + (p.maxRadius - p.radius) * easeProgress);
+            var alpha = Math.max(0, Math.min(1, p.alpha * (1 - progress)));
+            if(alpha > 0.005){
+              ctx.globalAlpha = alpha;
+              ctx.drawImage(vaporSprite, p.x - r, p.y - r, r * 2, r * 2);
+            }
+          } else if(p.type === "spark"){
+            p.driftPhase += 0.08;
+            p.x += Math.sin(p.driftPhase) * 0.35;
+            var sparkAlpha = Math.max(0, Math.min(1, p.alpha * (1 - progress)));
+            if(sparkAlpha > 0.01){
+              ctx.globalAlpha = sparkAlpha;
+              var sr = Math.max(1, p.radius * 2.2);
+              ctx.drawImage(sparkSprite, p.x - sr, p.y - sr, sr * 2, sr * 2);
+            }
+          }
+        }
+
+        ctx.globalAlpha = 1;
+
+        // If there are still particles, continue the animation loop
+        if(particles.length > 0){
+          rafId = requestAnimationFrame(renderLoop);
+        } else {
+          // All particles dissolved: clean canvas and enter zero-CPU sleep
+          ctx.clearRect(0, 0, width, height);
+          isTicking = false;
+          rafId = null;
+        }
+      } catch(err){
+        console.warn("[virai] scent cursor loop recovered:", err);
+        ctx.clearRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+        isTicking = false;
+        rafId = null;
+      }
+    }
+
+    function onMouseLeave(){
+      isHover = false;
+    }
+
+    function destroyCursor(){
+      if(rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("mousemove", onPointerMove);
+      window.removeEventListener("resize", resize);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      if(canvas && canvas.parentNode){
+        canvas.parentNode.removeChild(canvas);
+      }
+    }
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("mousemove", onPointerMove, { passive: true });
+    document.addEventListener("mouseleave", onMouseLeave, { passive: true });
+
+    window.addEventListener("touchstart", function onFirstTouch(){
+      destroyCursor();
+      window.removeEventListener("touchstart", onFirstTouch);
+    }, { passive: true, once: true });
+
+    try {
+      var mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if(mql.addEventListener){
+        mql.addEventListener("change", function(e){
+          if(e.matches) destroyCursor();
+        });
+      }
+    } catch(e){}
+  }
+
   // The sensory experience layer is progressive: loaded only when
   // motion is welcome, and never required for content or commerce.
   function initExperience(){
@@ -1061,7 +1521,9 @@
     try{ autoTag(); }catch(e){ console.error("[virai] autoTag failed:", e); }
     try{ initReveals(); }catch(e){ console.error("[virai] initReveals failed:", e); }
     try{ initHeroMotion(); }catch(e){ console.error("[virai] initHeroMotion failed:", e); }
+    try{ initCandleParallax(); }catch(e){ console.error("[virai] initCandleParallax failed:", e); }
     try{ initLandSwitcher(); }catch(e){ console.error("[virai] initLandSwitcher failed:", e); }
+    try{ initScentCursor(); }catch(e){ console.error("[virai] initScentCursor failed:", e); }
     try{ initExperience(); }catch(e){ console.error("[virai] initExperience failed:", e); }
   });
 })();

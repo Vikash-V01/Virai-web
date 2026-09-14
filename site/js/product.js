@@ -15,7 +15,7 @@
         '<h1 style="font-size:clamp(1.9rem,3.6vw,2.8rem)">This object is not here.</h1>' +
         '<p class="lede" style="margin:1.2rem auto 0">The piece you are looking for may have been renamed or retired. The collection, however, remains.</p>' +
         '<div style="margin-top:2.4rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">' +
-          '<a class="btn btn-solid" href="shop.html">Shop Fragrance</a>' +
+          '<a class="btn btn-solid" href="shop.html">Explore Our Collection</a>' +
           '<a class="btn btn-line" href="ainthinai.html">Explore Ainthinai</a>' +
         '</div>' +
       '</section>';
@@ -30,8 +30,9 @@
   var metaDesc = document.querySelector('meta[name="description"]');
   if(metaDesc) metaDesc.setAttribute("content", p.shortScent + " " + p.sub + ".");
 
-  var GALLERY = ["a","b","c"];
-  var curKey = "a";
+  var GALLERY = (p.img && typeof p.img === "object") ? Object.keys(p.img).filter(function(k){ return !!p.img[k]; }) : ["a","b","c"];
+  if(GALLERY.length === 0) GALLERY = ["a"];
+  var curKey = GALLERY[0];
   var CONTAIN = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:3%";
 
   function mainImgHTML(key){

@@ -4,12 +4,16 @@
   "description": "Contemporary fragrance and gifting house rooted in Tamil sensory heritage.",
   "scripts": {
     "dev": "node server.js",
-    "lint": "node -c server.js && node -c server/store.js",
+    "lint": "node -c server.js && node -c server/store.js && node -c server/firestore.js && node -c server/postmark.js && node -c server/cashfree.js",
     "build": "echo 'Build ready'",
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "@google-cloud/firestore": "^9.1.0",
+    "cashfree-pg": "^6.0.6",
+    "express": "^4.21.2",
+    "firebase": "^12.19.0",
+    "postmark": "^5.1.0"
   },
   "overrides": {
     "qs": "^6.16.0"

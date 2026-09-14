@@ -502,6 +502,40 @@
   ],
   "orders": [
     {
+      "id": "VR-MU1SO2S5-CF1D",
+      "items": [
+        {
+          "id": "kurinji-candle",
+          "name": "Kurinji · Union Candle",
+          "price": 2850,
+          "qty": 1,
+          "giftWrap": true,
+          "wrapCost": 150,
+          "lineTotal": 3000,
+          "message": "For your new home"
+        }
+      ],
+      "subtotal": 3000,
+      "discount": 0,
+      "couponCode": null,
+      "shippingMethod": "standard",
+      "shippingCost": 0,
+      "total": 3000,
+      "contact": {
+        "name": "Vikash Suresh",
+        "email": "vikashsuresh69@gmail.com",
+        "phone": "+91 9876543210",
+        "address": "12 Temple View Lane",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "pincode": "600004"
+      },
+      "status": "Confirmed",
+      "paymentMethod": "cashfree",
+      "paymentStatus": "Pending",
+      "createdAt": "2026-09-14T22:08:18.965Z"
+    },
+    {
       "id": "VR-MTN1ZBVZ-6870",
       "items": [
         {

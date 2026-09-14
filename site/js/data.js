@@ -159,9 +159,9 @@ const VIRAI = {
     }
   ],
   brand: {
-    homeHero:{ d:"img/16.webp", m:"img/17.webp", wd:1672, hd:941, wm:852, hm:1846,
+    homeHero:{ d:"img/16.webp", m:"img/16.webp", wd:1672, hd:941, wm:1672, hm:941,
                altD:"The Virai world — soft candlelight beside a quiet Tamil landscape", altM:"The Virai world — candlelight over a calm landscape at dusk" },
-    houseIntro:{ src:"img/26.webp", w:1024, h:1536, alt:"Warm wax being poured in the Virai studio" },
+    houseIntro:{ src:"img/candle-unlit.webp", halflit:"img/candle-halflit.webp", lit:"img/candle-lit.webp", w:1086, h:1448, alt:"Virai handcrafted candle in ceramic vessel" },
     craftWax:{ src:"img/18.webp", w:1448, h:1086, alt:"Raw wax in soft directional light, showing its natural texture" },
     craftVessel:{ src:"img/19.webp", w:1448, h:1086, alt:"Handcrafted candle vessels resting in the studio" },
     craftPaper:{ src:"img/20.webp", w:1448, h:1086, alt:"Virai packaging papers and cord arranged flat" },

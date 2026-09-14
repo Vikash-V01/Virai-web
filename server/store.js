@@ -255,6 +255,8 @@ function placeOrder({ items, shipType, couponCode, contact }) {
     total: calc.grandTotal,
     contact: contactVal.contact,
     status: 'Confirmed',
+    paymentMethod: 'cashfree',
+    paymentStatus: 'Pending',
     createdAt: new Date().toISOString()
   };
 
@@ -268,7 +270,185 @@ function placeOrder({ items, shipType, couponCode, contact }) {
 
   saveStore(store);
 
+  // Asynchronously persist order to Firestore
+  try {
+    const firestore = require('./firestore');
+    firestore.saveOrderToFirestore(order).catch(err => {
+      console.warn('[store:firestore] Async Firestore order save warning:', err.message);
+    });
+  } catch (err) {
+    console.warn('[store:firestore] Firestore module load warning:', err.message);
+  }
+
   return order;
+}
+
+function updateOrderPaymentStatus(orderId, { paymentStatus, paymentId, cashfreeOrderId, paymentMethod }) {
+  const s = getStore();
+  s.orders = s.orders || [];
+  const idx = s.orders.findIndex(o => o.id === orderId);
+  if (idx === -1) return null;
+
+  if (paymentStatus) s.orders[idx].paymentStatus = paymentStatus;
+  if (paymentId) s.orders[idx].paymentId = paymentId;
+  if (cashfreeOrderId) s.orders[idx].cashfreeOrderId = cashfreeOrderId;
+  if (paymentMethod) s.orders[idx].paymentMethod = paymentMethod;
+  if (paymentStatus === 'Paid') s.orders[idx].status = 'Confirmed';
+  s.orders[idx].updatedAt = new Date().toISOString();
+
+  saveStore(s);
+
+  // Sync to Firestore
+  try {
+    const firestore = require('./firestore');
+    firestore.updateOrderPaymentInFirestore(orderId, { paymentStatus, paymentId, paymentMethod }).catch(err => {
+      console.warn('[store:firestore] Async Firestore payment status update warning:', err.message);
+    });
+  } catch (err) {
+    console.warn('[store:firestore] Firestore module load warning:', err.message);
+  }
+
+  return s.orders[idx];
+}
+
+// -------------------------------------------------------------
+// CUSTOMER ACCOUNT MANAGEMENT (DPDP-compliant, PBKDF2 hashed)
+// -------------------------------------------------------------
+
+function findCustomerByEmail(email) {
+  if (!email || typeof email !== 'string') return null;
+  const cleanEmail = email.trim().toLowerCase();
+  const s = getStore();
+  s.customers = s.customers || [];
+  return s.customers.find(c => c.email.toLowerCase() === cleanEmail) || null;
+}
+
+function registerCustomer({ email, password, name, phone }) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
+    throw new Error('Please enter a valid email address');
+  }
+
+  if (!password || typeof password !== 'string' || password.length < 8) {
+    throw new Error('Password must be at least 8 characters long');
+  }
+
+  const s = getStore();
+  s.customers = s.customers || [];
+
+  if (s.customers.some(c => c.email.toLowerCase() === cleanEmail)) {
+    throw new Error('An account already exists with this email address. Please sign in.');
+  }
+
+  const { salt, hash } = hashPassword(password);
+  const newCustomer = {
+    id: `cust_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
+    email: cleanEmail,
+    name: sanitizeText(name || '', 60),
+    phone: sanitizeText(phone || '', 20),
+    salt,
+    hash,
+    emailVerified: true, // Auto-verified upon successful registration in this environment
+    savedAddresses: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  s.customers.unshift(newCustomer);
+  saveStore(s);
+
+  // Asynchronously persist customer to Firestore
+  try {
+    const firestore = require('./firestore');
+    firestore.saveCustomerToFirestore(newCustomer).catch(err => {
+      console.warn('[store:firestore] Async Firestore customer save warning:', err.message);
+    });
+  } catch (err) {
+    console.warn('[store:firestore] Firestore module load warning:', err.message);
+  }
+
+  return {
+    id: newCustomer.id,
+    email: newCustomer.email,
+    name: newCustomer.name,
+    phone: newCustomer.phone,
+    emailVerified: newCustomer.emailVerified,
+    createdAt: newCustomer.createdAt
+  };
+}
+
+function verifyCustomerCredentials(email, password) {
+  const customer = findCustomerByEmail(email);
+  if (!customer) return null;
+  if (!customer.salt || !customer.hash) return null;
+
+  const valid = verifyPassword(password, customer.salt, customer.hash);
+  if (!valid) return null;
+
+  return {
+    id: customer.id,
+    email: customer.email,
+    name: customer.name,
+    phone: customer.phone,
+    emailVerified: customer.emailVerified,
+    savedAddresses: customer.savedAddresses || []
+  };
+}
+
+function getCustomerOrders(email) {
+  if (!email) return [];
+  const cleanEmail = email.trim().toLowerCase();
+  const s = getStore();
+  return (s.orders || []).filter(o => o.contact && o.contact.email && o.contact.email.toLowerCase() === cleanEmail);
+}
+
+function updateCustomerProfile(email, { name, phone, savedAddresses }) {
+  const s = getStore();
+  s.customers = s.customers || [];
+  const cleanEmail = email.trim().toLowerCase();
+  const idx = s.customers.findIndex(c => c.email.toLowerCase() === cleanEmail);
+  if (idx === -1) throw new Error('Account not found');
+
+  if (name !== undefined) s.customers[idx].name = sanitizeText(name, 60);
+  if (phone !== undefined) s.customers[idx].phone = sanitizeText(phone, 20);
+  if (Array.isArray(savedAddresses)) {
+    s.customers[idx].savedAddresses = savedAddresses.slice(0, 5).map(addr => ({
+      name: sanitizeText(addr.name || '', 60),
+      address: sanitizeText(addr.address || '', 200),
+      city: sanitizeText(addr.city || '', 60),
+      state: sanitizeText(addr.state || '', 60),
+      pincode: sanitizeText(addr.pincode || '', 10),
+      isDefault: Boolean(addr.isDefault)
+    }));
+  }
+
+  s.customers[idx].updatedAt = new Date().toISOString();
+  saveStore(s);
+  return {
+    id: s.customers[idx].id,
+    email: s.customers[idx].email,
+    name: s.customers[idx].name,
+    phone: s.customers[idx].phone,
+    savedAddresses: s.customers[idx].savedAddresses
+  };
+}
+
+function resetCustomerPassword(email, newPassword) {
+  if (!newPassword || newPassword.length < 8) {
+    throw new Error('New password must be at least 8 characters');
+  }
+  const s = getStore();
+  s.customers = s.customers || [];
+  const cleanEmail = email.trim().toLowerCase();
+  const idx = s.customers.findIndex(c => c.email.toLowerCase() === cleanEmail);
+  if (idx === -1) throw new Error('Account not found');
+
+  const { salt, hash } = hashPassword(newPassword);
+  s.customers[idx].salt = salt;
+  s.customers[idx].hash = hash;
+  s.customers[idx].updatedAt = new Date().toISOString();
+  saveStore(s);
+  return true;
 }
 
 module.exports = {
@@ -278,6 +458,13 @@ module.exports = {
   verifyPassword,
   calculateOrder,
   placeOrder,
+  updateOrderPaymentStatus,
   validateContact,
-  sanitizeText
+  sanitizeText,
+  findCustomerByEmail,
+  registerCustomer,
+  verifyCustomerCredentials,
+  getCustomerOrders,
+  updateCustomerProfile,
+  resetCustomerPassword
 };

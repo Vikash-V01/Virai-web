@@ -52,6 +52,82 @@
 .admin-input-group input, .admin-input-group select, .admin-input-group textarea { width: 100%; background: #fff; border: 1px solid var(--line); padding: .75rem 1rem; font-size: .92rem; border-radius: 2px; }
 .admin-input-group input:focus, .admin-input-group select:focus, .admin-input-group textarea:focus { outline: 2px solid var(--ink); }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* Product Photography Upload & Management */
+.photo-dropzone {
+  border: 2px dashed var(--line, #ddd5c6);
+  border-radius: 4px;
+  background: var(--rice, #f5f1e8);
+  padding: 1.4rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  user-select: none;
+}
+.photo-dropzone:hover, .photo-dropzone.dragover {
+  border-color: var(--ink, #23201b);
+  background: #ede7dc;
+}
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: .85rem;
+}
+.photo-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line, #ddd5c6);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+  display: flex;
+  flex-direction: column;
+}
+.photo-card-img-wrap {
+  aspect-ratio: 1;
+  background: var(--rice, #f5f1e8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.photo-card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-card-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(35,32,27,.88);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .2rem .45rem;
+  border-radius: 2px;
+}
+.photo-card-badge.badge-cover {
+  background: #2e5932;
+}
+.photo-card-actions {
+  padding: .5rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  border-top: 1px solid var(--line-soft, #ece7dd);
+}
+.btn-micro {
+  padding: .26rem .45rem;
+  font-size: .72rem;
+  border-radius: 2px;
+  width: 100%;
+  text-align: center;
+}
 </style>
 </head>
 <body class="admin-shell">
@@ -418,19 +494,41 @@
       </div>
 
       <div class="admin-input-group">
-        <label for="prodImageSelect">Product Studio Photography</label>
-        <select id="prodImageSelect">
-          <option value="1">Image Set 1 (Kurinji Candle)</option>
-          <option value="2">Image Set 2 (Mullai Candle)</option>
-          <option value="3">Image Set 3 (Marutham Candle)</option>
-          <option value="4">Image Set 4 (Neithal Candle)</option>
-          <option value="5">Image Set 5 (Palai Candle)</option>
-          <option value="6">Image Set 6 (Kurinji Travel)</option>
-          <option value="7">Image Set 7 (Mullai Travel)</option>
-          <option value="8">Image Set 8 (Neithal Travel)</option>
-          <option value="9">Image Set 9 (Discovery Set)</option>
-          <option value="10">Image Set 10 (Complete Collection)</option>
-        </select>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem">
+          <label style="margin:0">Product Studio Photography</label>
+          <span class="small muted">Upload new launch photos or pick preset</span>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div class="photo-dropzone" id="newProdDropzone" role="button" tabindex="0" aria-label="Upload product photos">
+          <input type="file" id="newProdFileInput" multiple accept="image/png,image/jpeg,image/webp,image/avif" style="display:none">
+          <div class="photo-dropzone-content">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto .4rem;display:block;opacity:.6"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <p style="font-weight:500;margin:0 0 .2rem;font-size:.88rem">Drop photos here or <span style="text-decoration:underline;color:var(--ink)">browse files</span></p>
+            <p class="small muted" style="margin:0">Supports JPG, PNG, WebP, AVIF &bull; Multiple angles supported</p>
+          </div>
+        </div>
+
+        <!-- Previews of uploaded images -->
+        <div id="newProdPhotoPreviews" class="photo-grid" style="display:none;margin-top:.85rem"></div>
+
+        <!-- Fallback studio preset option -->
+        <div style="margin-top:.85rem;padding-top:.7rem;border-top:1px dashed var(--line);display:flex;align-items:center;gap:.8rem">
+          <label for="prodImageSelect" style="margin:0;font-size:.76rem;white-space:nowrap;color:var(--mineral)">Or use preset images:</label>
+          <select id="prodImageSelect" style="flex:1;padding:.4rem .65rem;font-size:.82rem">
+            <option value="custom" id="optCustomUpload" disabled style="display:none">Custom Uploaded Photos</option>
+            <option value="1" selected>Image Set 1 (Kurinji Candle)</option>
+            <option value="2">Image Set 2 (Mullai Candle)</option>
+            <option value="3">Image Set 3 (Marutham Candle)</option>
+            <option value="4">Image Set 4 (Neithal Candle)</option>
+            <option value="5">Image Set 5 (Palai Candle)</option>
+            <option value="6">Image Set 6 (Kurinji Travel)</option>
+            <option value="7">Image Set 7 (Mullai Travel)</option>
+            <option value="8">Image Set 8 (Neithal Travel)</option>
+            <option value="9">Image Set 9 (Discovery Set)</option>
+            <option value="10">Image Set 10 (Complete Collection)</option>
+          </select>
+        </div>
       </div>
 
       <div class="admin-input-group">
@@ -517,6 +615,50 @@
         <button type="submit" class="btn btn-solid btn-sm">Create Coupon</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: MANAGE PRODUCT PHOTOS (EXISTING PRODUCTS) -->
+<!-- ============================================================ -->
+<div id="modalManagePhotos" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="managePhotosTitle">
+  <div class="modal-box" style="max-width:680px">
+    <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    <p class="kicker" style="margin-bottom:.4rem">Studio Photography</p>
+    <h3 id="managePhotosTitle" style="font-family:var(--serif);font-size:1.55rem;margin-bottom:.3rem">Product Photography</h3>
+    <p class="small muted" id="managePhotosSub" style="margin-bottom:1.4rem">Upload new studio photos, set primary cover, or delete angles.</p>
+
+    <input type="hidden" id="managePhotosProdId">
+
+    <!-- Existing / Current Photos Grid -->
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <label style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);margin:0">Active Images</label>
+        <span class="small muted" id="managePhotosCount">0 images</span>
+      </div>
+      <div id="managePhotosList" class="photo-grid"></div>
+    </div>
+
+    <!-- Upload Another Photo Dropzone -->
+    <div class="admin-input-group" style="margin-bottom:1.4rem">
+      <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem">
+        <span>Upload Another Photo</span>
+        <span class="small muted">Drag &amp; drop or click</span>
+      </label>
+      <div class="photo-dropzone" id="manageDropzone" role="button" tabindex="0" aria-label="Upload photo to add to gallery">
+        <input type="file" id="manageFileInput" multiple accept="image/png,image/jpeg,image/webp,image/avif" style="display:none">
+        <div class="photo-dropzone-content">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto .4rem;display:block;opacity:.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <p style="font-weight:500;margin:0 0 .2rem;font-size:.88rem">Drop new image here or <span style="text-decoration:underline;color:var(--ink)">browse file</span></p>
+          <p class="small muted" style="margin:0">Will be appended to this product's catalogue gallery</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.8rem;justify-content:flex-end">
+      <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+      <button type="button" class="btn btn-solid btn-sm" id="btnSavePhotos">Save Image Changes</button>
+    </div>
   </div>
 </div>
 

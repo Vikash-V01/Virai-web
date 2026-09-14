@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>500 &middot; Server Notice | VIRAI</title>
+<meta name="description" content="A temporary disturbance occurred in the studio servers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="img/virai-logo.webp">
+<link rel="stylesheet" href="css/virai.css">
+<style>
+.error-hero {
+  min-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1.5rem;
+}
+.error-code {
+  font-family: var(--serif);
+  font-size: clamp(4rem, 10vw, 7.5rem);
+  line-height: 1;
+  color: var(--marutham);
+  opacity: 0.6;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.04em;
+}
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2rem;
+}
+</style>
+</head>
+<body data-page="500">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-main">
+    <a class="brand-mark" href="index.html" aria-label="Virai - home">
+      <img class="logo-img" src="img/virai-logo.webp" alt="Virai">
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="error-hero wrap">
+    <span class="error-code">500</span>
+    <p class="tamil" style="font-size:1.4rem;color:var(--mineral);margin-bottom:.5rem">மன்னிக்கவும்</p>
+    <h1 style="font-size:clamp(1.8rem,3.2vw,2.5rem);margin-bottom:.8rem">The studio is momentarily pausing.</h1>
+    <p class="lede" style="max-width:52ch">A technical interruption prevented our digital vessel from answering your request. Our artisans have been alerted and order safeguards remain active.</p>
+    <div class="error-actions">
+      <button type="button" onclick="location.reload()" class="btn btn-solid">Try Again</button>
+      <a href="index.html" class="btn btn-line">Return to Studio</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" data-modular-footer id="site-footer"></footer>
+<script src="js/data.js"></script>
+<script src="js/footer.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

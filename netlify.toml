@@ -1,0 +1,8 @@
+[build]
+  publish = "site"
+  command = "echo 'Build ready'"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/api/:splat"
+  status = 200

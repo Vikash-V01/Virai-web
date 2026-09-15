@@ -398,6 +398,287 @@ app.get('/api/cashfree/verify-order', async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// SHIPMENT & ORDER TRACKING APIS
+// -------------------------------------------------------------
+
+function maskEmail(email) {
+  if (!email || typeof email !== 'string') return '';
+  const parts = email.split('@');
+  if (parts.length !== 2) return '****';
+  const name = parts[0];
+  const domain = parts[1];
+  if (name.length <= 2) return `${name[0]}*@${domain}`;
+  return `${name[0]}${'*'.repeat(Math.min(name.length - 2, 4))}${name[name.length - 1]}@${domain}`;
+}
+
+function maskPhone(phone) {
+  if (!phone || typeof phone !== 'string') return '';
+  const clean = phone.trim();
+  if (clean.length < 6) return '******';
+  return clean.slice(0, 5) + '****' + clean.slice(-2);
+}
+
+function maskName(name) {
+  if (!name || typeof name !== 'string') return '';
+  const words = name.trim().split(/\s+/);
+  return words.map(w => w.length <= 2 ? w : w[0] + '*'.repeat(Math.min(w.length - 1, 4))).join(' ');
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+const DEMO_SAMPLE_ORDER = {
+  id: 'VR-SAMPLE-KURINJI',
+  createdAt: new Date(Date.now() - 36 * 3600000).toISOString(),
+  status: 'Dispatched',
+  shippingMethod: 'standard',
+  total: 3000,
+  courier: 'Blue Dart Express',
+  awb: 'BD-8492019482IN',
+  trackingUrl: 'https://www.bluedart.com/',
+  contact: {
+    name: 'Vikash Suresh',
+    email: 'vikashsuresh69@gmail.com',
+    phone: '+91 9876543210',
+    address: '12 Temple View Lane',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    pincode: '600004'
+  },
+  items: [
+    {
+      id: 'kurinji-candle',
+      name: 'Kurinji · Union Candle',
+      price: 2850,
+      qty: 1,
+      giftWrap: true,
+      message: 'For your new beginning — may it linger unhurriedly.'
+    }
+  ]
+};
+
+function buildTrackingPayload(order, storeProducts = []) {
+  const isDemo = order.id === 'VR-SAMPLE-KURINJI';
+  const createdAt = new Date(order.createdAt || Date.now());
+  const now = Date.now();
+  const isExpress = (order.shippingMethod === 'express');
+
+  const leadDays = isExpress ? 2 : 4;
+  const estDeliveryDate = new Date(createdAt.getTime() + leadDays * 24 * 60 * 60 * 1000);
+  const projectedEta = (estDeliveryDate.getTime() < now && order.status !== 'Delivered')
+    ? new Date(now + 2 * 24 * 60 * 60 * 1000)
+    : estDeliveryDate;
+
+  const courier = order.courier || (isExpress ? 'Blue Dart Apex Express' : 'Blue Dart Express');
+  const awb = order.awb || ('BD' + Math.abs(hashString(order.id)).toString().padStart(8, '0') + 'IN');
+  const trackingUrl = order.trackingUrl || `https://www.bluedart.com/`;
+
+  let activeStep = 1;
+  let statusBadge = 'Order Confirmed';
+  let statusTone = 'stone';
+
+  if (order.status === 'Cancelled') {
+    activeStep = -1;
+    statusBadge = 'Order Cancelled';
+    statusTone = 'red';
+  } else if (order.status === 'Delivered') {
+    activeStep = 5;
+    statusBadge = 'Delivered';
+    statusTone = 'green';
+  } else if (order.status === 'Dispatched') {
+    activeStep = 4;
+    statusBadge = `In Transit with ${courier.split(' ')[0]}`;
+    statusTone = 'amber';
+  } else {
+    const hoursSince = (now - createdAt.getTime()) / (1000 * 60 * 60);
+    if (hoursSince >= 12 || isDemo) {
+      activeStep = 2;
+      statusBadge = 'Artisan Formulation in Studio';
+      statusTone = 'stone';
+    } else {
+      activeStep = 1;
+      statusBadge = 'Order Confirmed & Wax Reserved';
+      statusTone = 'stone';
+    }
+  }
+
+  const milestones = [
+    {
+      step: 1,
+      name: 'Order Placed & Payment Verified',
+      location: 'Virai Digital Studio',
+      time: createdAt.toISOString(),
+      completed: activeStep >= 1,
+      current: activeStep === 1,
+      detail: `Payment of ₹${(order.total || 0).toLocaleString('en-IN')} authorized via ${order.paymentMethod || 'Cashfree'}. Reference ${order.id} verified.`
+    },
+    {
+      step: 2,
+      name: 'Artisan Pouring & Wax Curing',
+      location: 'Virai Atelier, Coimbatore',
+      time: new Date(createdAt.getTime() + 8 * 3600000).toISOString(),
+      completed: activeStep >= 2,
+      current: activeStep === 2,
+      detail: 'Wax formulation blended with fragrance oils, hand-poured into ceramic vessels, and allowed to slow-cure.'
+    },
+    {
+      step: 3,
+      name: 'Packaging & Calligraphy Sealing',
+      location: 'Virai Atelier, Coimbatore',
+      time: new Date(createdAt.getTime() + 18 * 3600000).toISOString(),
+      completed: activeStep >= 3,
+      current: activeStep === 3,
+      detail: 'Vessel hand-inspected, wrapped in textured paper. Handwritten gift cards inscribed and wax sealed.'
+    },
+    {
+      step: 4,
+      name: 'Dispatched & Handed to Carrier',
+      location: 'Coimbatore Hub, Tamil Nadu',
+      time: new Date(createdAt.getTime() + 24 * 3600000).toISOString(),
+      completed: activeStep >= 4,
+      current: activeStep === 4,
+      detail: `Consignment scanned and handed over to ${courier}. AWB: ${awb}.`
+    },
+    {
+      step: 5,
+      name: 'Delivered to Destination',
+      location: order.contact ? `${order.contact.city || 'Destination'}, ${order.contact.state || ''}` : 'Recipient Address',
+      time: order.status === 'Delivered' ? (order.updatedAt || projectedEta.toISOString()) : projectedEta.toISOString(),
+      completed: activeStep >= 5,
+      current: activeStep === 5,
+      detail: order.status === 'Delivered'
+        ? 'Parcel delivered safely and signed for.'
+        : `Expected delivery on or before ${projectedEta.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}.`
+    }
+  ];
+
+  const richItems = (order.items || []).map(item => {
+    const p = storeProducts.find(prod => prod.id === item.id);
+    return {
+      id: item.id,
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      lineTotal: item.lineTotal || (item.price * item.qty),
+      giftWrap: Boolean(item.giftWrap),
+      message: item.message || '',
+      size: p ? p.size : 'Standard',
+      sub: p ? p.sub : '',
+      img: p && p.img ? (p.img.a || p.img.thumb || 'img/1a.webp') : 'img/1a.webp'
+    };
+  });
+
+  return {
+    orderId: order.id,
+    status: order.status || 'Confirmed',
+    statusBadge,
+    statusTone,
+    activeStep,
+    totalSteps: 5,
+    createdAt: createdAt.toISOString(),
+    createdAtFormatted: createdAt.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }),
+    estimatedDelivery: projectedEta.toISOString(),
+    estimatedDeliveryFormatted: projectedEta.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }),
+    shippingMethod: isExpress ? 'Express Courier Delivery (1–2 Days)' : 'Standard Complimentary Shipping (3–7 Days)',
+    isExpress,
+    courier,
+    awb,
+    trackingUrl,
+    contactMasked: {
+      name: maskName(order.contact?.name || 'Customer'),
+      email: maskEmail(order.contact?.email || ''),
+      phone: maskPhone(order.contact?.phone || ''),
+      city: order.contact?.city || '',
+      state: order.contact?.state || '',
+      pincode: order.contact?.pincode || '',
+      destination: `${order.contact?.city || ''}${order.contact?.state ? ', ' + order.contact.state : ''} ${order.contact?.pincode ? '(' + order.contact.pincode + ')' : ''}`.trim()
+    },
+    items: richItems,
+    itemsCount: richItems.reduce((acc, it) => acc + (it.qty || 1), 0),
+    total: order.total,
+    milestones
+  };
+}
+
+// Public Shipment & Order Tracking Handler
+app.all('/api/orders/track', (req, res) => {
+  try {
+    const rawRef = (req.query.orderId || req.query.order || req.query.id || req.query.awb || req.body?.orderId || req.body?.order || '').trim();
+    const contactFilter = (req.query.contact || req.body?.contact || '').trim().toLowerCase();
+
+    if (!rawRef) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter your Virai Order Reference (e.g. VR-MU1SO2S5-CF1D) or AWB Number.'
+      });
+    }
+
+    const cleanRef = rawRef.replace(/^[#\s]+/, '').trim().toUpperCase();
+
+    // Check demo / sample queries
+    if (cleanRef === 'DEMO' || cleanRef === 'SAMPLE' || cleanRef === 'VR-SAMPLE-KURINJI' || cleanRef === 'VR-DEMO') {
+      const s = store.getStore();
+      const payload = buildTrackingPayload(DEMO_SAMPLE_ORDER, s.products || []);
+      return res.json({ success: true, tracking: payload, isDemo: true });
+    }
+
+    const s = store.getStore();
+    const orders = s.orders || [];
+
+    // Search by exact ID, stripped prefix ID, or AWB
+    let found = orders.find(o => {
+      const oId = (o.id || '').toUpperCase();
+      const oAwb = (o.awb || '').toUpperCase();
+      return (
+        oId === cleanRef ||
+        oId.replace(/^VR-/, '') === cleanRef ||
+        oAwb === cleanRef ||
+        ('VR-' + cleanRef) === oId
+      );
+    });
+
+    // Fallback: search by phone or email if provided
+    if (!found && contactFilter) {
+      found = orders.find(o => {
+        const email = (o.contact?.email || '').toLowerCase();
+        const phone = (o.contact?.phone || '').replace(/\D/g, '');
+        const cleanContact = contactFilter.replace(/\D/g, '');
+        return email === contactFilter || (cleanContact && phone.includes(cleanContact));
+      });
+    }
+
+    if (!found) {
+      return res.status(404).json({
+        success: false,
+        error: `No consignment found for reference "${cleanRef}". Please verify the order ID sent to your email, or explore our live demo shipment.`,
+        sampleOrderId: 'VR-SAMPLE-KURINJI'
+      });
+    }
+
+    const payload = buildTrackingPayload(found, s.products || []);
+    res.json({ success: true, tracking: payload });
+  } catch (err) {
+    console.error('[shipment:track-error]', err);
+    res.status(500).json({ success: false, error: 'Tracking service temporarily unavailable. Please try again shortly.' });
+  }
+});
+
+// -------------------------------------------------------------
 // CUSTOMER ACCOUNT & LIFECYCLE APIS (Registration, Auth, OTP/Magic-Link, Orders)
 // -------------------------------------------------------------
 
@@ -1284,12 +1565,17 @@ app.put('/api/admin/orders/:id/status', requireAdmin, (req, res) => {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
 
-    const { status } = req.body;
-    if (!['Confirmed', 'Dispatched', 'Delivered', 'Cancelled'].includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid status value' });
+    const { status, courier, awb, trackingUrl } = req.body;
+    if (status) {
+      if (!['Confirmed', 'Dispatched', 'Delivered', 'Cancelled'].includes(status)) {
+        return res.status(400).json({ success: false, error: 'Invalid status value' });
+      }
+      order.status = status;
     }
+    if (courier !== undefined) order.courier = String(courier).trim();
+    if (awb !== undefined) order.awb = String(awb).trim();
+    if (trackingUrl !== undefined) order.trackingUrl = String(trackingUrl).trim();
 
-    order.status = status;
     order.updatedAt = new Date().toISOString();
     store.saveStore(s);
 
@@ -1389,6 +1675,11 @@ app.post('/api/admin/change-password', requireAdmin, (req, res) => {
 app.get('/admin', (req, res) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.sendFile(path.join(siteDir, 'admin.html'));
+});
+
+// Explicit alias for Shipment Tracking routes
+app.get(['/shipment', '/shipment.html'], (req, res) => {
+  res.sendFile(path.join(siteDir, 'shipping.html'));
 });
 
 // Serve static assets from site directory with html extension fallback

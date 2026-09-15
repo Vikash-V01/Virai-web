@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shipping | VIRAI</title>
-<meta name="description" content="Virai shipping - dispatch times, delivery windows across India, and gift delivery. Placeholder bands pending final logistics sign-off.">
+<title>Shipping &amp; Consignment Tracking | VIRAI</title>
+<meta name="description" content="Track your Virai shipment in real time. Dispatch times, courier milestones across India, and studio gift delivery.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
     <nav class="head-nav head-left" aria-label="Primary">
       <div class="has-sub">
         <a href="shop.html">Shop</a>
-        <div class="sub"><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Gift Sets</a><a href="shop.html?family=floral">By Fragrance</a></div>
+        <div class="sub"><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Gift Sets</a><a href="shop.html?family=floral">By Fragrance</a><a href="index.html#gifting" data-scroll-to="gifting">Request a Quote</a></div>
       </div>
       <div class="has-sub">
         <a href="ainthinai.html">Ainthinai</a>
@@ -51,7 +51,7 @@
 </header>
 <div class="mobile-menu" id="mmenu" aria-label="Menu">
   <button class="mm-close" aria-label="Close menu">&times;</button>
-  <div class="mm-group"><h5>Shop</h5><a href="shop.html">All Products</a><a href="shop.html?family=floral">By Fragrance</a><a href="shop.html?type=Set">Gift Sets</a></div>
+  <div class="mm-group"><h5>Shop</h5><a href="shop.html">All Products</a><a href="shop.html?family=floral">By Fragrance</a><a href="shop.html?type=Set">Gift Sets</a><a href="index.html#gifting" data-scroll-to="gifting">Request a Quote</a></div>
   <div class="mm-group"><h5>Ainthinai - Collection 01</h5><a href="ainthinai.html">The Five Landscapes</a><a href="landscape.html?id=kurinji">Kurinji · Union</a><a href="landscape.html?id=mullai">Mullai · Waiting</a><a href="landscape.html?id=marutham">Marutham · Playful Conflict</a><a href="landscape.html?id=neithal">Neithal · Longing</a><a href="landscape.html?id=palai">Palai · Separation</a></div>
   <div class="mm-group"><h5>Gift</h5><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
   <div class="mm-group"><h5>Discover</h5><a href="story.html">Our Story</a><a href="fragrance-memory.html">Fragrance &amp; Memory</a><a href="craft.html">Craft &amp; Materials</a></div>
@@ -61,16 +61,52 @@
 <main id="main">
   <section class="page-hero">
     <div class="wrap center">
-      <p class="kicker">Support · Shipping</p>
+      <p class="kicker">Support · Shipping &amp; Logistics</p>
       <h1>On its way, unhurriedly.</h1>
       <p class="lede" style="margin-top:1rem">Dispatched from our studio within two working days of your order.</p>
     </div>
   </section>
 
-  <section class="section-tight">
+  <!-- Live Shipment & Consignment Tracker -->
+  <section class="section-tight" id="track" style="padding-top:1rem;padding-bottom:1.5rem">
     <div class="wrap" style="max-width:820px">
+      <div class="track-box reveal">
+        <div style="text-align:center;max-width:540px;margin:0 auto 1.8rem">
+          <p class="small uppercase" style="letter-spacing:.14em;color:var(--mineral);margin-bottom:.4rem">Live Dispatch Tracking</p>
+          <h2 style="font-family:var(--serif);font-size:1.85rem;margin:0 0 .5rem">Track your consignment</h2>
+          <p class="lede" style="font-size:.95rem;color:var(--ink-soft);margin:0">Enter your Virai order reference (e.g. VR-MU1SO2S5-CF1D) or carrier AWB to observe studio pouring, quality inspection, and carrier transit.</p>
+        </div>
+
+        <form id="trackForm" class="track-form-wrap" novalidate>
+          <div class="track-input-row">
+            <input type="text" id="trackInput" class="track-input" placeholder="e.g. VR-MU1SO2S5-CF1D or AWB #" aria-label="Order Reference or Consignment AWB" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" required>
+            <button type="submit" id="trackBtn" class="btn btn-solid" style="white-space:nowrap;padding:0 1.6rem">Track Parcel</button>
+          </div>
+          <div class="track-helpers">
+            <span>Explore demonstration:</span>
+            <button type="button" class="sample-chip" data-sample="VR-MU1SO2S5-CF1D">VR-MU1SO2S5-CF1D</button>
+            <button type="button" class="sample-chip" data-sample="VR-SAMPLE-KURINJI">Demo Shipment</button>
+          </div>
+          <div id="trackError" style="display:none"></div>
+          <div id="trackLoader" style="display:none;text-align:center;padding:1.6rem 0">
+            <div style="display:inline-block;width:24px;height:24px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin 1s linear infinite"></div>
+            <p class="small muted" style="margin-top:.6rem">Consulting logistics dispatch ledger…</p>
+          </div>
+        </form>
+
+        <div id="trackResults" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight" style="padding-top:0">
+    <div class="wrap" style="max-width:820px">
+      <div style="margin-bottom:1.5rem">
+        <p class="small uppercase" style="letter-spacing:.14em;color:var(--mineral);margin-bottom:.3rem">Domestic Delivery Schedule</p>
+        <h2 style="font-family:var(--serif);font-size:1.6rem;margin:0">India-wide Delivery Bands</h2>
+      </div>
       <table class="detail-table reveal">
-        <caption class="small" style="text-align:left;padding-bottom:.8rem">India-wide bands - placeholder figures pending Finance &amp; Supply Chain confirmation</caption>
+        <caption class="small" style="text-align:left;padding-bottom:.8rem">All shipments originate from the Virai Atelier in Coimbatore, Tamil Nadu</caption>
         <tr><th scope="col">Method</th><th scope="col">Time</th><th scope="col">Cost</th></tr>
         <tr><td>Standard</td><td>3 – 7 business days</td><td>₹99 · complimentary over ₹3,000</td></tr>
         <tr><td>Express</td><td>1 – 2 business days (metros first)</td><td>₹350</td></tr>
@@ -91,5 +127,6 @@
 <script src="js/data.js"></script>
 <script src="js/footer.js"></script>
 <script src="js/main.js"></script>
+<script src="js/shipping.js"></script>
 </body>
 </html>

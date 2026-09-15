@@ -536,6 +536,60 @@
       if(bagBtn){ e.preventDefault(); openDrawer(bagBtn); }
     });
 
+    // Smooth scroll navigation to Gifting / Quote section
+    function scrollToGifting(immediate){
+      var target = document.getElementById("gifting");
+      if(!target) return false;
+
+      var head = document.querySelector(".site-head");
+      var offset = head ? head.offsetHeight + 18 : 84;
+      var targetPos = target.getBoundingClientRect().top + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: Math.max(0, targetPos),
+        behavior: (immediate || !MOTION) ? "auto" : "smooth"
+      });
+
+      // Ensure elements inside #gifting are revealed immediately
+      $all(".reveal:not(.in)", target).forEach(function(r){ r.classList.add("in"); });
+
+      // Close open mobile menu if active
+      if(mmenu && mmenu.classList.contains("open")){
+        mmenu.classList.remove("open");
+        if(burger) burger.setAttribute("aria-expanded","false");
+        document.body.style.overflow = "";
+      }
+
+      // Close dropdowns by blurring active focus
+      if(document.activeElement && typeof document.activeElement.blur === "function"){
+        document.activeElement.blur();
+      }
+      return true;
+    }
+
+    document.addEventListener("click", function(e){
+      var link = e.target.closest('a[href*="#gifting"], a[data-scroll-to="gifting"]');
+      if(link){
+        var isHomePage = document.body.dataset.page === "home" ||
+                         window.location.pathname === "/" ||
+                         window.location.pathname.endsWith("/index.html") ||
+                         window.location.pathname.endsWith("/");
+        if(isHomePage && document.getElementById("gifting")){
+          e.preventDefault();
+          scrollToGifting(false);
+          if(window.history && window.history.pushState){
+            window.history.pushState(null, "", "#gifting");
+          }
+        }
+      }
+    });
+
+    if(window.location.hash === "#gifting"){
+      setTimeout(function(){
+        scrollToGifting(false);
+      }, 250);
+    }
+
     // Modular footer initialization (if loaded)
     if(window.VIRAI_FOOTER && typeof window.VIRAI_FOOTER.init === "function"){
       window.VIRAI_FOOTER.init();

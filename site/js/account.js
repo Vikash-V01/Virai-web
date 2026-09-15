@@ -306,9 +306,12 @@
             '<span class="badge-status badge-confirmed">' + escapeHtml(ord.status || 'Confirmed') + '</span>' +
           '</div>' +
           '<p style="font-size:.92rem;margin-bottom:.8rem"><strong>Objects:</strong> ' + itemsSummary + '</p>' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:.8rem">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:.8rem;flex-wrap:wrap;gap:.6rem">' +
             '<span class="small muted">Delivering to: ' + escapeHtml(ord.contact ? (ord.contact.city + ', ' + ord.contact.state) : '') + '</span>' +
-            '<strong style="font-size:1.05rem">₹' + (ord.total || 0).toLocaleString('en-IN') + '</strong>' +
+            '<div style="display:flex;align-items:center;gap:.8rem">' +
+              '<a href="shipping.html?order=' + encodeURIComponent(ord.id) + '#track" class="btn btn-line btn-sm">Track Parcel &rarr;</a>' +
+              '<strong style="font-size:1.05rem">₹' + (ord.total || 0).toLocaleString('en-IN') + '</strong>' +
+            '</div>' +
           '</div>' +
         '</div>';
     });

@@ -32,12 +32,7 @@
       {
         title: 'Collections',
         links: [
-          { label: 'Ainthinai', url: 'ainthinai.html' },
-          { label: 'Kurinji', url: 'landscape.html?id=kurinji' },
-          { label: 'Mullai', url: 'landscape.html?id=mullai' },
-          { label: 'Marutham', url: 'landscape.html?id=marutham' },
-          { label: 'Neithal', url: 'landscape.html?id=neithal' },
-          { label: 'Palai', url: 'landscape.html?id=palai' }
+          { label: 'Ainthinai', url: 'ainthinai.html' }
         ]
       },
       {
@@ -53,9 +48,10 @@
         title: 'Care & Legal',
         links: [
           { label: 'Customer Account', url: 'account.html' },
+          { label: 'Track Shipment', url: 'shipping.html#track' },
           { label: 'Contact', url: 'contact.html' },
           { label: 'FAQs', url: 'faq.html' },
-          { label: 'Shipping', url: 'shipping.html' },
+          { label: 'Shipping & Delivery', url: 'shipping.html' },
           { label: 'Returns', url: 'returns.html' },
           { label: 'Product Care', url: 'care.html' },
           { label: 'Terms of Service', url: 'terms.html' },

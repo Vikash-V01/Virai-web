@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Find Your Virai | VIRAI</title>
-<meta name="description" content="Three quiet questions. One considered fragrance recommendation - with the reasoning shown. Find the landscape of Ainthinai that matches your feeling.">
+<title>Find Your Virai | Fragrance Consultation</title>
+<meta name="description" content="Four quiet questions grounded in Tamil landscape poetics and sensory memory. Answer by instinct — we reveal the landscape and fragrance that belongs to you.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..650;1,9..144,300..650&family=Inter:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;600&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
     <nav class="head-nav head-left" aria-label="Primary">
       <div class="has-sub">
         <a href="shop.html">Shop</a>
-        <div class="sub"><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Gift Sets</a><a href="shop.html?family=floral">By Fragrance</a></div>
+        <div class="sub"><a href="shop.html">All Products</a><a href="shop.html?type=Candle">Candles</a><a href="shop.html?type=Set">Gift Sets</a><a href="shop.html?family=floral">By Fragrance</a><a href="index.html#gifting" data-scroll-to="gifting">Request a Quote</a></div>
       </div>
       <div class="has-sub">
         <a href="ainthinai.html">Ainthinai</a>
@@ -51,7 +51,7 @@
 </header>
 <div class="mobile-menu" id="mmenu" aria-label="Menu">
   <button class="mm-close" aria-label="Close menu">&times;</button>
-  <div class="mm-group"><h5>Shop</h5><a href="shop.html">All Products</a><a href="shop.html?family=floral">By Fragrance</a><a href="shop.html?type=Set">Gift Sets</a></div>
+  <div class="mm-group"><h5>Shop</h5><a href="shop.html">All Products</a><a href="shop.html?family=floral">By Fragrance</a><a href="shop.html?type=Set">Gift Sets</a><a href="index.html#gifting" data-scroll-to="gifting">Request a Quote</a></div>
   <div class="mm-group"><h5>Ainthinai - Collection 01</h5><a href="ainthinai.html">The Five Landscapes</a><a href="landscape.html?id=kurinji">Kurinji · Union</a><a href="landscape.html?id=mullai">Mullai · Waiting</a><a href="landscape.html?id=marutham">Marutham · Playful Conflict</a><a href="landscape.html?id=neithal">Neithal · Longing</a><a href="landscape.html?id=palai">Palai · Separation</a></div>
   <div class="mm-group"><h5>Gift</h5><a href="find-your-virai.html">Find Your Virai</a><a href="gift.html#personal">Personal Gifting</a><a href="weddings.html">Weddings &amp; Events</a><a href="corporate.html">Corporate Gifting</a></div>
   <div class="mm-group"><h5>Discover</h5><a href="story.html">Our Story</a><a href="fragrance-memory.html">Fragrance &amp; Memory</a><a href="craft.html">Craft &amp; Materials</a></div>
@@ -59,14 +59,23 @@
 </div>
 
 <main id="main">
-  <section class="quiz-shell">
-    <p class="kicker center" style="display:block">Find Your Virai - three quiet questions</p>
-    <h1 class="center" style="font-size:clamp(2rem,4vw,3rem)">Which landscape holds your feeling?</h1>
-    <div class="quiz-progress" aria-hidden="true"><i id="p1"></i><i id="p2"></i><i id="p3"></i></div>
+  <section class="quiz-shell" id="quizShell">
+    <p class="kicker center" style="display:block">Fragrance Consultation</p>
+    <h1 class="center" style="font-size:clamp(2rem,4vw,3rem)">Find Your Virai</h1>
+    <p class="center quiz-intro-sub" id="quizIntro">Four quiet questions grounded in Tamil landscape poetics and sensory memory. Answer by instinct — we will reveal the landscape and fragrance that belongs to you.</p>
+    <div class="quiz-progress-bar" id="progressBar" aria-label="Consultation Progress">
+      <div class="quiz-progress-track">
+        <span class="quiz-progress-fill" id="quizFill" style="width:25%"></span>
+      </div>
+      <div class="quiz-step-label">
+        <span id="stepLabel">Step 1 of 4 · The Setting</span>
+        <span id="stepPercent">25%</span>
+      </div>
+    </div>
     <div id="stage" aria-live="polite"></div>
     <div class="quiz-nav">
-      <button class="link-u" id="backBtn" hidden style="border:none;border-bottom:1px solid var(--ink)">Back</button>
-      <button class="link-u" id="restartBtn" hidden style="border:none;color:var(--mineral)">Start again</button>
+      <button class="link-u" id="backBtn" hidden style="border:none;border-bottom:1px solid var(--ink);cursor:pointer;background:none;font-family:inherit;padding:0.4rem 0">← Back to previous question</button>
+      <button class="link-u" id="restartBtn" hidden style="border:none;color:var(--mineral);cursor:pointer;background:none;font-family:inherit;padding:0.4rem 0">Start again</button>
     </div>
   </section>
 </main>

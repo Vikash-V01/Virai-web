@@ -451,6 +451,11 @@
       if(confAddr && a){
         confAddr.innerHTML = esc(a.name)+"<br>"+esc(a.address)+"<br>"+esc(a.city)+" "+esc(a.pincode)+"<br>"+(a.phone ? esc(a.phone) : "");
       }
+
+      var trackOrderBtn = document.getElementById("trackOrderBtn");
+      if(trackOrderBtn && o.id){
+        trackOrderBtn.href = "shipping.html?order=" + encodeURIComponent(o.id) + "#track";
+      }
     }
 
     var initialOrder = store(ORDER_KEY);

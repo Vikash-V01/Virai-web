@@ -129,6 +129,14 @@ function calculateOrder({ items, shipType = 'standard', couponCode = null }) {
       return { valid: false, error: `Product "${sanitizeText(item.id, 40)}" is unavailable or discontinued` };
     }
 
+    if (prod.status === 'out_of_stock' || prod.status === 'sold_out') {
+      return { valid: false, error: `"${prod.name}" is currently sold out and unavailable.` };
+    }
+
+    const isPrebooking = (prod.status === 'prebooking');
+    const prebookRelease = isPrebooking ? (prod.prebookRelease || prod.prebookingDate || 'Scheduled Studio Release') : '';
+    const prebookNote = isPrebooking ? (prod.prebookNote || '') : '';
+
     const qty = Math.max(1, Math.min(99, parseInt(item.qty, 10) || 1));
     const giftWrap = Boolean(item.giftWrap);
     const wrapCostPerUnit = giftWrap ? 150 : 0;
@@ -144,7 +152,10 @@ function calculateOrder({ items, shipType = 'standard', couponCode = null }) {
       giftWrap,
       wrapCost: lineWrapCost,
       lineTotal: linePrice + lineWrapCost,
-      message: sanitizeText(item.message || '', 180)
+      message: sanitizeText(item.message || '', 180),
+      isPrebooking,
+      prebookRelease,
+      prebookNote
     });
   }
 
@@ -216,6 +227,7 @@ function calculateOrder({ items, shipType = 'standard', couponCode = null }) {
     shippingCost,
     freeShipThreshold,
     grandTotal,
+    hasPrebooking: verifiedItems.some(it => it.isPrebooking),
     items: verifiedItems
   };
 }
@@ -247,6 +259,8 @@ function placeOrder({ items, shipType, couponCode, contact }) {
   const order = {
     id: orderId,
     items: calc.items,
+    hasPrebooking: Boolean(calc.hasPrebooking),
+    prebookingNotice: calc.hasPrebooking ? 'Includes slow-pour pre-booking allocation' : null,
     subtotal: calc.subtotal,
     discount: calc.discount,
     couponCode: calc.appliedCoupon ? calc.appliedCoupon.code : null,

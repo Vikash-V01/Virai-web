@@ -159,7 +159,11 @@
     }
     saveCart(c);
     track("add_to_bag", { product_id: id, price: p.price, gift_wrap: giftWrap, qty: qty });
-    toast(p.name.split("\u00B7")[0].trim() + " added to bag");
+    if(p.status === "prebooking"){
+      toast("Pre-booked: " + p.name.split("\u00B7")[0].trim() + " reserved in your bag");
+    } else {
+      toast(p.name.split("\u00B7")[0].trim() + " added to bag");
+    }
     openDrawer();
   }
   window.viraiAddToBag = addToBag;
@@ -198,16 +202,32 @@
   window.viraiPimgAlt = pimgAlt;
 
   function cardHTML(p){
+    var isPrebook = (p.status === "prebooking");
+    var isSoldOut = (p.status === "out_of_stock" || p.status === "sold_out");
+    var badgeHTML = isPrebook
+      ? '<span class="pcard-badge-prebook">Pre-book</span>'
+      : (isSoldOut ? '<span class="pcard-badge-prebook" style="background:rgba(80,75,70,.92)">Sold Out</span>' : '');
+
+    var actionBtn = isSoldOut
+      ? '<button class="pcard-add" disabled style="opacity:.5;cursor:not-allowed">Sold Out</button>'
+      : (isPrebook
+          ? '<button class="pcard-add pcard-prebook" data-add="'+p.id+'" title="Pre-book this limited studio release">Pre-book</button>'
+          : '<button class="pcard-add" data-add="'+p.id+'">Add to Bag</button>');
+
     return '' +
-    '<article class="pcard">' +
-      '<a href="product.html?id='+p.id+'" class="pcard-media" aria-label="'+p.name+'">' + pimg(p,"a",{eager:true}) + pimgAlt(p) + '</a>' +
+    '<article class="pcard' + (isPrebook ? ' pcard-is-prebook' : '') + '">' +
+      '<a href="product.html?id='+p.id+'" class="pcard-media" aria-label="'+p.name+'">' +
+        pimg(p,"a",{eager:true}) + pimgAlt(p) +
+        badgeHTML +
+      '</a>' +
       '<div class="pcard-body">' +
         '<span class="pcard-land">'+landLabel(p)+'</span>' +
         '<h3 class="pcard-name"><a href="product.html?id='+p.id+'">'+p.name+'</a></h3>' +
         '<span class="pcard-scent">'+p.shortScent+'</span>' +
+        (isPrebook && p.prebookRelease ? '<span class="small" style="color:#2B3D52;margin-top:.25rem;display:block;font-size:.74rem;font-weight:500">&#9679; ' + p.prebookRelease + '</span>' : '') +
         '<div class="pcard-foot">' +
           '<span class="price">'+fmt(p.price)+'</span>' +
-          '<button class="pcard-add" data-add="'+p.id+'">Add to Bag</button>' +
+          actionBtn +
         '</div>' +
       '</div>' +
     '</article>';
@@ -252,11 +272,13 @@
       c.items.forEach(function(item, idx){
         var p = VIRAI.productById(item.id);
         if(!p) return;
+        var isPrebook = (p.status === "prebooking");
         lines += '<div class="d-line">' +
           '<a href="product.html?id='+p.id+'" class="d-art" aria-label="'+p.name+'">'+pimg(p,"a")+'</a>' +
           '<div class="d-info">' +
             '<div class="n">'+p.name+'</div>' +
             '<div class="m">'+p.size+' \u00B7 '+fmt(p.price)+'</div>' +
+            (isPrebook ? '<div class="d-prebook-tag"><span class="prebook-dot"></span>Pre-booking' + (p.prebookRelease ? (' · ' + p.prebookRelease) : '') + '</div>' : '') +
             (item.giftWrap ? '<div class="d-gift-tag">Gift wrap'+(item.message ? " \u00B7 note enclosed" : "")+'</div>' : '') +
             '<div class="d-ctrl">' +
               '<span class="d-qty"><button data-dq="-1" data-i="'+idx+'" aria-label="Decrease">\u2212</button><span>'+item.qty+'</span><button data-dq="1" data-i="'+idx+'" aria-label="Increase">+</button></span>' +
@@ -266,6 +288,11 @@
       });
     }
 
+    var hasAnyPrebook = c.items.some(function(it){
+      var prod = VIRAI.productById(it.id);
+      return prod && prod.status === "prebooking";
+    });
+
     drawer.innerHTML =
       '<div class="drawer-head"><h3>Your Bag <span class="muted">('+cartCount()+')</span></h3><button class="drawer-x" aria-label="Close bag">\u00D7</button></div>' +
       '<div class="drawer-ship">'+shipMsg+'<div class="bar"><i style="width:'+pct+'%"></i></div></div>' +
@@ -273,7 +300,7 @@
       '<div class="drawer-foot">' +
         '<div class="d-total"><span>Subtotal</span><span>'+fmt(sub)+'</span></div>' +
         '<a class="btn btn-solid'+(c.items.length===0?" disabled":"")+'" href="checkout.html">Proceed to Checkout</a>' +
-        '<p class="d-sub">Shipping calculated at checkout \u00B7 Gift options available</p>' +
+        '<p class="d-sub">' + (hasAnyPrebook ? 'Includes slow-pour pre-booking · Vessels reserved upon checkout' : 'Shipping calculated at checkout \u00B7 Gift options available') + '</p>' +
       '</div>';
 
     $all(".drawer-x", drawer).forEach(function(b){ b.addEventListener("click", closeDrawer); });

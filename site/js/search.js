@@ -12,6 +12,9 @@
       var l = VIRAI.landscapes[p.landscape];
       parts.push(l.name, l.emotion, l.tamil);
     }
+    if(p.status === "prebooking"){
+      parts.push("prebook", "prebooking", "pre-booking", "preorder", "upcoming", "release", p.prebookRelease || "", p.prebookNote || "");
+    }
     Object.keys(p.notes).forEach(function(k){ parts.push(p.notes[k].join(" ")); });
     return parts.join(" ").toLowerCase();
   }

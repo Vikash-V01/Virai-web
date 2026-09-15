@@ -227,7 +227,9 @@
         "glow": "radial-gradient(circle at 62% 32%,#F4EFE4 0%,transparent 56%)"
       },
       "featured": false,
-      "status": "in_stock",
+      "status": "prebooking",
+      "prebookRelease": "Dispatches from 28 September 2026",
+      "prebookNote": "Slow-pour Batch 02 · Limited allocation of 120 numbered vessels",
       "createdAt": "2026-09-04T14:29:01.969Z"
     },
     {
@@ -537,6 +539,7 @@
     },
     {
       "id": "VR-MTN1ZBVZ-6870",
+      "hasPrebooking": true,
       "items": [
         {
           "id": "kurinji-candle",
@@ -546,7 +549,9 @@
           "giftWrap": false,
           "wrapCost": 0,
           "lineTotal": 2950,
-          "message": ""
+          "message": "",
+          "isPrebooking": true,
+          "prebookRelease": "Late September 2026 Studio Batch"
         }
       ],
       "subtotal": 2950,

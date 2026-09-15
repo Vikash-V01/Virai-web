@@ -85,7 +85,10 @@ const VIRAI = {
       story:"For seasons apart. For the strength of what remains when someone steps away and is still yours.",
       img:{ a:"img/5a.webp", b:"img/5b.webp", c:"img/5c.webp" },
       art:{ bg:"linear-gradient(160deg,#ECE7DD 0%,#CDC0AA 52%,#8B7F6C 100%)", glow:"radial-gradient(circle at 62% 32%,#F4EFE4 0%,transparent 56%)" },
-      featured:false
+      featured:false,
+      status:"prebooking",
+      prebookRelease:"Dispatches from 28 September 2026",
+      prebookNote:"Slow-pour Batch 02 · Limited allocation of 120 numbered vessels"
     },
     {
       id:"kurinji-travel",

@@ -67,13 +67,21 @@
     }
 
     // Build Stepper nodes
-    var stepNames = [
-      "Confirmed",
-      "Studio Poured",
-      "Dispatched",
-      "In Transit",
-      "Delivered"
-    ];
+    var stepNames = t.hasPrebooking
+      ? [
+          "Batch Reserved",
+          "Studio Poured",
+          "Curing & Inspected",
+          "Dispatched",
+          "Delivered"
+        ]
+      : [
+          "Confirmed",
+          "Studio Poured",
+          "Dispatched",
+          "In Transit",
+          "Delivered"
+        ];
 
     var stepperHtml = '<div class="track-stepper">';
     stepperHtml += '<div class="track-stepper-progress" style="width:' + progressPct + '%"></div>';
@@ -124,6 +132,16 @@
         '</li>';
     });
 
+    var prebookBannerHtml = t.hasPrebooking
+      ? '<div class="pdp-prebook-banner" style="margin:1rem 0;border-radius:4px">' +
+          '<div class="prebook-head">' +
+            '<span class="prebook-pill"><span class="prebook-dot"></span>Pre-booking Batch Allocation</span>' +
+            '<span class="prebook-release-badge">&#128340; Studio Batch Reserve</span>' +
+          '</div>' +
+          '<p class="prebook-desc" style="margin-top:.4rem">This consignment contains an artisan slow-pour pre-booking release. Your numbered vessel is allocated in the studio schedule and will dispatch on completion of the cure.</p>' +
+        '</div>'
+      : '';
+
     trackResults.innerHTML =
       '<div class="track-result-wrap">' +
         '<div class="track-status-head">' +
@@ -143,6 +161,7 @@
             '<button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">&#128424; Print</button>' +
           '</div>' +
         '</div>' +
+        prebookBannerHtml +
 
         '<div class="track-eta-banner">' +
           '<div>' +

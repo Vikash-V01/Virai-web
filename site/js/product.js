@@ -99,9 +99,70 @@
     ["Wick", "Cotton, lead-free"],
     ["Vessel", "Stoneware-toned, reusable"]
   ];
-  document.getElementById("specTable").innerHTML = specRows.map(function(r){
-    return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>";
-  }).join("");
+
+  function applyStatusUI(prod){
+    var isPrebook = (prod.status === "prebooking");
+    var isSoldOut = (prod.status === "out_of_stock" || prod.status === "sold_out");
+
+    var prebookBanner = document.getElementById("pdpPrebookBanner");
+    var atbActionText = document.getElementById("atbActionText");
+    var atbBtn = document.getElementById("atbBtn");
+    var sbAtb = document.getElementById("sbAtb");
+
+    if(isPrebook){
+      if(prebookBanner){
+        prebookBanner.style.display = "block";
+        var etaEl = document.getElementById("pdpPrebookEta");
+        var noteEl = document.getElementById("pdpPrebookNote");
+        if(etaEl && prod.prebookRelease) etaEl.textContent = prod.prebookRelease;
+        if(noteEl && prod.prebookNote) noteEl.innerHTML = '<strong>Upcoming Batch:</strong> ' + prod.prebookNote;
+      }
+      if(atbActionText) atbActionText.textContent = "Pre-book Vessel";
+      if(sbAtb) sbAtb.textContent = "Pre-book Vessel";
+      if(atbBtn){ atbBtn.disabled = false; atbBtn.style.opacity = ""; atbBtn.style.cursor = ""; }
+    } else if(isSoldOut){
+      if(prebookBanner) prebookBanner.style.display = "none";
+      if(atbBtn){
+        atbBtn.disabled = true;
+        atbBtn.innerHTML = "Currently Sold Out";
+        atbBtn.style.opacity = ".55";
+        atbBtn.style.cursor = "not-allowed";
+      }
+      if(sbAtb){
+        sbAtb.disabled = true;
+        sbAtb.textContent = "Sold Out";
+        sbAtb.style.opacity = ".55";
+        sbAtb.style.cursor = "not-allowed";
+      }
+    } else {
+      if(prebookBanner) prebookBanner.style.display = "none";
+      if(atbActionText) atbActionText.textContent = "Add to Bag";
+      if(sbAtb) sbAtb.textContent = "Add to Bag";
+      if(atbBtn){ atbBtn.disabled = false; atbBtn.style.opacity = ""; atbBtn.style.cursor = ""; }
+    }
+
+    var specs = specRows.slice();
+    if(isPrebook){
+      specs.unshift(["Availability", "Pre-booking Open (" + (prod.prebookRelease || "Scheduled Release") + ")"]);
+    } else if(isSoldOut){
+      specs.unshift(["Availability", "Currently Out of Stock"]);
+    } else {
+      specs.unshift(["Availability", "In Stock · Dispatches in 2 working days"]);
+    }
+    document.getElementById("specTable").innerHTML = specs.map(function(r){
+      return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>";
+    }).join("");
+  }
+  applyStatusUI(p);
+
+  window.addEventListener("virai-catalogue-synced", function(){
+    var fresh = VIRAI.productById(p.id);
+    if(fresh){
+      p = fresh;
+      applyStatusUI(fresh);
+      updateAtb();
+    }
+  });
 
   var qty = document.getElementById("qtyInput");
   document.getElementById("qMinus").addEventListener("click", function(){

@@ -36,14 +36,27 @@
 
   // Render initial items line breakdown
   var linesHost = document.getElementById("sumLines");
+  var hasCartPrebook = cart.items.some(function(i){
+    var p = (window.VIRAI && window.VIRAI.productById) ? VIRAI.productById(i.id) : null;
+    return p && p.status === "prebooking";
+  });
+
+  if(hasCartPrebook && linesHost && linesHost.parentNode){
+    var prebookAlert = document.createElement("div");
+    prebookAlert.className = "checkout-prebook-alert";
+    prebookAlert.innerHTML = '<span class="prebook-dot"></span><div><strong>Pre-booking Allocation Included:</strong> Your order reserves vessel allocation from our upcoming studio slow-pour batch. You will receive milestone notifications as curing and preparation complete.</div>';
+    linesHost.parentNode.insertBefore(prebookAlert, linesHost);
+  }
+
   linesHost.innerHTML = cart.items.map(function(i){
     var p = (window.VIRAI && window.VIRAI.productById) ? VIRAI.productById(i.id) : null;
     var name = p ? p.name : i.id;
     var price = p ? p.price : (i.price || 0);
+    var isPrebook = p && p.status === "prebooking";
     return '<div class="sum-line">' +
       '<div class="sum-art">'+(window.viraiPimg && p ? window.viraiPimg(p,"a") : '')+'</div>' +
-      '<div class="sum-info"><div class="n">'+esc(name)+'</div>' +
-      '<div class="m">Qty '+i.qty+(i.giftWrap?' \u00B7 gift wrap'+(i.message?' \u00B7 \u201C'+esc(i.message)+'\u201D':''):'')+'</div></div>' +
+      '<div class="sum-info"><div class="n">'+esc(name)+(isPrebook ? ' <span class="prebook-badge-sm">Pre-book</span>' : '')+'</div>' +
+      '<div class="m">Qty '+i.qty+(isPrebook && p.prebookRelease ? ' \u00B7 '+esc(p.prebookRelease) : '')+(i.giftWrap?' \u00B7 gift wrap'+(i.message?' \u00B7 \u201C'+esc(i.message)+'\u201D':''):'')+'</div></div>' +
       '<span class="price" style="white-space:nowrap">'+fmt((price+(i.giftWrap?150:0))*i.qty)+'</span>' +
       '</div>';
   }).join("");
@@ -423,12 +436,21 @@
       var confEmail = document.getElementById("confEmail");
       if(confEmail) confEmail.textContent = o.contact.email;
 
+      var isOrdPrebook = o.hasPrebooking || (o.items && o.items.some(function(i){ return i.isPrebooking; }));
+      if(isOrdPrebook){
+        var confTitle = document.querySelector("#step-confirmed h1");
+        if(confTitle) confTitle.textContent = "Pre-booking Confirmed";
+        var confLede = document.querySelector("#step-confirmed .lede");
+        if(confLede) confLede.textContent = "Your pre-booking allocation is reserved. We will update you at every studio milestone.";
+      }
+
       var lines = o.items.map(function(i){
         var p = (window.VIRAI && window.VIRAI.productById) ? VIRAI.productById(i.id) : null;
         var name = p ? p.name : i.name || i.id;
+        var isPrebook = i.isPrebooking || (p && p.status === "prebooking");
         return '<div class="sum-line">' +
           '<div class="sum-art">'+(window.viraiPimg && p ? window.viraiPimg(p,"a") : '')+'</div>' +
-          '<div class="sum-info"><div class="n">'+esc(name)+'</div><div class="m">Qty '+i.qty+'</div></div>' +
+          '<div class="sum-info"><div class="n">'+esc(name)+(isPrebook ? ' <span class="prebook-badge-sm">Pre-book</span>' : '')+'</div><div class="m">Qty '+i.qty+(isPrebook && i.prebookRelease ? ' \u00B7 '+esc(i.prebookRelease) : '')+'</div></div>' +
           '<span class="price" style="white-space:nowrap">'+fmt((i.price || (p?p.price:0))*i.qty)+'</span></div>';
       }).join("");
 

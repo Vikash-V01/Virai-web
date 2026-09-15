@@ -174,7 +174,9 @@ app.get('/api/products', (req, res) => {
       img: p.img,
       art: p.art,
       featured: p.featured,
-      status: p.status || 'in_stock'
+      status: p.status || 'in_stock',
+      prebookRelease: p.prebookRelease || p.prebookingDate || '',
+      prebookNote: p.prebookNote || ''
     }));
 
     res.json({
@@ -479,6 +481,8 @@ function buildTrackingPayload(order, storeProducts = []) {
   const awb = order.awb || ('BD' + Math.abs(hashString(order.id)).toString().padStart(8, '0') + 'IN');
   const trackingUrl = order.trackingUrl || `https://www.bluedart.com/`;
 
+  const hasPrebooking = Boolean(order.hasPrebooking || (order.items && order.items.some(it => it.isPrebooking)));
+
   let activeStep = 1;
   let statusBadge = 'Order Confirmed';
   let statusTone = 'stone';
@@ -497,7 +501,11 @@ function buildTrackingPayload(order, storeProducts = []) {
     statusTone = 'amber';
   } else {
     const hoursSince = (now - createdAt.getTime()) / (1000 * 60 * 60);
-    if (hoursSince >= 12 || isDemo) {
+    if (hasPrebooking) {
+      activeStep = hoursSince >= 18 ? 2 : 1;
+      statusBadge = hoursSince >= 18 ? 'Pre-booking Curing in Studio' : 'Pre-booking Allocation Reserved';
+      statusTone = 'stone';
+    } else if (hoursSince >= 12 || isDemo) {
       activeStep = 2;
       statusBadge = 'Artisan Formulation in Studio';
       statusTone = 'stone';
@@ -511,21 +519,25 @@ function buildTrackingPayload(order, storeProducts = []) {
   const milestones = [
     {
       step: 1,
-      name: 'Order Placed & Payment Verified',
+      name: hasPrebooking ? 'Pre-booking Confirmed & Allocation Reserved' : 'Order Placed & Payment Verified',
       location: 'Virai Digital Studio',
       time: createdAt.toISOString(),
       completed: activeStep >= 1,
       current: activeStep === 1,
-      detail: `Payment of ₹${(order.total || 0).toLocaleString('en-IN')} authorized via ${order.paymentMethod || 'Cashfree'}. Reference ${order.id} verified.`
+      detail: hasPrebooking
+        ? `Pre-booking payment authorized via ${order.paymentMethod || 'Cashfree'}. Studio batch allocation secured for ${order.id}.`
+        : `Payment of ₹${(order.total || 0).toLocaleString('en-IN')} authorized via ${order.paymentMethod || 'Cashfree'}. Reference ${order.id} verified.`
     },
     {
       step: 2,
-      name: 'Artisan Pouring & Wax Curing',
+      name: hasPrebooking ? 'Small-Batch Slow-Pour & Curing' : 'Artisan Pouring & Wax Curing',
       location: 'Virai Atelier, Coimbatore',
       time: new Date(createdAt.getTime() + 8 * 3600000).toISOString(),
       completed: activeStep >= 2,
       current: activeStep === 2,
-      detail: 'Wax formulation blended with fragrance oils, hand-poured into ceramic vessels, and allowed to slow-cure.'
+      detail: hasPrebooking
+        ? 'Bespoke botanical wax formulation poured and slow-curing under monitored studio conditions for release dispatch.'
+        : 'Wax formulation blended with fragrance oils, hand-poured into ceramic vessels, and allowed to slow-cure.'
     },
     {
       step: 3,
@@ -576,6 +588,7 @@ function buildTrackingPayload(order, storeProducts = []) {
 
   return {
     orderId: order.id,
+    hasPrebooking,
     status: order.status || 'Confirmed',
     statusBadge,
     statusTone,
@@ -1297,7 +1310,9 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
       img: p.img || { a: 'img/1a.webp', b: 'img/1b.webp', c: 'img/1c.webp' },
       art: p.art || { bg: 'linear-gradient(160deg,#E7EAF1 0%,#56648C 100%)', glow: 'radial-gradient(circle at 68% 30%,#F2F1EA 0%,transparent 55%)' },
       featured: Boolean(p.featured),
-      status: ['in_stock', 'low_stock', 'sold_out'].includes(p.status) ? p.status : 'in_stock',
+      status: ['in_stock', 'prebooking', 'low_stock', 'out_of_stock', 'sold_out'].includes(p.status) ? p.status : 'in_stock',
+      prebookRelease: store.sanitizeText(p.prebookRelease || p.prebookingDate || '', 100),
+      prebookNote: store.sanitizeText(p.prebookNote || '', 200),
       createdAt: new Date().toISOString()
     };
 
@@ -1346,7 +1361,9 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
     if (updates.story !== undefined) current.story = store.sanitizeText(updates.story, 500);
     if (updates.img !== undefined && typeof updates.img === 'object') current.img = updates.img;
     if (updates.featured !== undefined) current.featured = Boolean(updates.featured);
-    if (updates.status !== undefined && ['in_stock', 'low_stock', 'sold_out'].includes(updates.status)) current.status = updates.status;
+    if (updates.status !== undefined && ['in_stock', 'prebooking', 'low_stock', 'out_of_stock', 'sold_out'].includes(updates.status)) current.status = updates.status;
+    if (updates.prebookRelease !== undefined) current.prebookRelease = store.sanitizeText(updates.prebookRelease, 100);
+    if (updates.prebookNote !== undefined) current.prebookNote = store.sanitizeText(updates.prebookNote, 200);
 
     current.updatedAt = new Date().toISOString();
     s.products[idx] = current;

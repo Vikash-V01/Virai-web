@@ -86,6 +86,14 @@
         <dl class="notes" id="pdpNotes"></dl>
       </div>
 
+      <div class="pdp-prebook-banner" id="pdpPrebookBanner" style="display:none">
+        <div class="prebook-head">
+          <span class="prebook-pill"><span class="prebook-dot"></span>Pre-booking Open</span>
+          <span class="prebook-release-badge" id="pdpPrebookEta">Scheduled Studio Release</span>
+        </div>
+        <p class="prebook-desc" id="pdpPrebookNote">Reserve your vessel from our upcoming studio pour. Hand-crafted in limited batches; dispatches immediately upon optimal maturation.</p>
+      </div>
+
       <div class="buy-box">
         <div class="buy-row">
           <span class="qty">
@@ -93,7 +101,7 @@
             <input id="qtyInput" value="1" inputmode="numeric" aria-label="Quantity">
             <button id="qPlus" aria-label="Increase quantity">+</button>
           </span>
-          <button class="btn btn-solid" id="atbBtn">Add to Bag - <span id="atbPrice"></span></button>
+          <button class="btn btn-solid" id="atbBtn"><span id="atbActionText">Add to Bag</span> &ndash; <span id="atbPrice"></span></button>
         </div>
         <div class="gift-module">
           <label class="check-row">

@@ -276,15 +276,24 @@
         '<td><span class="status-pill '+esc(statusClass)+'">'+esc(statusLabel)+'</span></td>' +
         '<td>'+(p.featured ? '<span class="status-pill in_stock">&#9733; Featured</span>' : '<span class="small muted">Standard</span>')+'</td>' +
         '<td style="text-align:right;white-space:nowrap">' +
+          '<button type="button" class="btn btn-line btn-sm btn-edit-prod" data-id="'+esc(p.id)+'" style="margin-right:.4rem">&#9998; Edit</button>' +
           '<button type="button" class="btn btn-line btn-sm btn-edit-photos" data-id="'+esc(p.id)+'" style="margin-right:.4rem">&#128247; Photos</button>' +
-          '<button type="button" class="btn btn-line btn-sm btn-edit-price" data-id="'+esc(p.id)+'" data-name="'+esc(p.name)+'" data-price="'+p.price+'" style="margin-right:.4rem">Change Price</button>' +
-          '<button type="button" class="btn btn-line btn-sm btn-toggle-stock" data-id="'+esc(p.id)+'" data-status="'+esc(p.status||'in_stock')+'" style="margin-right:.4rem">Toggle Stock</button>' +
+          '<button type="button" class="btn btn-line btn-sm btn-edit-price" data-id="'+esc(p.id)+'" data-name="'+esc(p.name)+'" data-price="'+p.price+'" style="margin-right:.4rem">Price</button>' +
+          '<button type="button" class="btn btn-line btn-sm btn-toggle-stock" data-id="'+esc(p.id)+'" data-status="'+esc(p.status||'in_stock')+'" style="margin-right:.4rem">Cycle Status</button>' +
           '<button type="button" class="btn btn-line btn-sm btn-danger btn-delete-prod" data-id="'+esc(p.id)+'" data-name="'+esc(p.name)+'">Delete</button>' +
         '</td>' +
         '</tr>';
     }).join("");
 
     // Attach listeners
+    tbody.querySelectorAll(".btn-edit-prod").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        var p = allProducts.find(function(item){ return item.id === id; });
+        if(!p) return;
+        openEditProductModal(p);
+      });
+    });
     tbody.querySelectorAll(".btn-edit-photos").forEach(function(btn){
       btn.addEventListener("click", function(){
         var id = btn.getAttribute("data-id");
@@ -308,14 +317,24 @@
       btn.addEventListener("click", function(){
         var id = btn.getAttribute("data-id");
         var cur = btn.getAttribute("data-status");
-        var next = cur === "in_stock" ? "out_of_stock" : "in_stock";
+        var next = "in_stock";
+        if(cur === "in_stock") next = "prebooking";
+        else if(cur === "prebooking") next = "out_of_stock";
+        else next = "in_stock";
+
+        var p = allProducts.find(function(item){ return item.id === id; });
+        var updatePayload = { status: next };
+        if(next === "prebooking"){
+          updatePayload.prebookRelease = (p && p.prebookRelease) ? p.prebookRelease : "Dispatches from 28 September 2026";
+          updatePayload.prebookNote = (p && p.prebookNote) ? p.prebookNote : "Slow-pour Batch 02 · Limited studio allocation";
+        }
 
         api("/api/admin/products/" + encodeURIComponent(id), {
           method: "PUT",
-          body: { status: next }
+          body: updatePayload
         })
         .then(function(){
-          showToast("Stock status updated");
+          showToast("Status updated to " + next.replace("_", " "));
           loadProducts();
         })
         .catch(function(err){
@@ -716,6 +735,52 @@
     });
   }
 
+  var prodStockSelect = document.getElementById("prodStock");
+  var prebookFieldsGroup = document.getElementById("prebookFieldsGroup");
+  function syncPrebookFieldsVisibility(){
+    if(!prodStockSelect || !prebookFieldsGroup) return;
+    prebookFieldsGroup.style.display = (prodStockSelect.value === "prebooking") ? "block" : "none";
+  }
+  if(prodStockSelect){
+    prodStockSelect.addEventListener("change", syncPrebookFieldsVisibility);
+  }
+
+  function openEditProductModal(p){
+    var form = document.getElementById("productForm");
+    if(form) form.reset();
+    newProdUploadedPhotos = [];
+
+    document.getElementById("prodEditMode").value = "edit";
+    document.getElementById("prodEditId").value = p.id;
+    document.getElementById("prodModalTitle").textContent = "Edit Product: " + p.name;
+
+    document.getElementById("prodName").value = p.name || "";
+    document.getElementById("prodSub").value = p.sub || "";
+    document.getElementById("prodPrice").value = p.price || "";
+    document.getElementById("prodLandscape").value = p.landscape || "";
+    document.getElementById("prodType").value = p.type || "Candle";
+    document.getElementById("prodStock").value = p.status || "in_stock";
+    document.getElementById("prodSize").value = p.size || "";
+    document.getElementById("prodBurn").value = p.burn || "";
+    document.getElementById("prodStory").value = p.story || "";
+    document.getElementById("prodFeatured").checked = !!p.featured;
+
+    var releaseEl = document.getElementById("prodPrebookRelease");
+    var noteEl = document.getElementById("prodPrebookNote");
+    if(releaseEl) releaseEl.value = p.prebookRelease || "";
+    if(noteEl) noteEl.value = p.prebookNote || "";
+
+    syncPrebookFieldsVisibility();
+
+    if(p.img && typeof p.img === "object"){
+      Object.keys(p.img).forEach(function(k){
+        if(p.img[k]) newProdUploadedPhotos.push(p.img[k]);
+      });
+    }
+    renderNewProdPhotoPreviews();
+    openModal("modalProduct");
+  }
+
   // Add Product Button
   var btnOpenAddProd = document.getElementById("btnOpenAddProd");
   if(btnOpenAddProd){
@@ -725,16 +790,24 @@
       newProdUploadedPhotos = [];
       renderNewProdPhotoPreviews();
       document.getElementById("prodEditMode").value = "create";
+      document.getElementById("prodEditId").value = "";
       document.getElementById("prodModalTitle").textContent = "Add New Product";
+      var releaseEl = document.getElementById("prodPrebookRelease");
+      var noteEl = document.getElementById("prodPrebookNote");
+      if(releaseEl) releaseEl.value = "";
+      if(noteEl) noteEl.value = "";
+      syncPrebookFieldsVisibility();
       openModal("modalProduct");
     });
   }
 
-  // Add Product Form Submission
+  // Add/Edit Product Form Submission
   var productForm = document.getElementById("productForm");
   if(productForm){
     productForm.addEventListener("submit", function(e){
       e.preventDefault();
+      var mode = document.getElementById("prodEditMode").value || "create";
+      var editId = document.getElementById("prodEditId").value;
       var name = document.getElementById("prodName").value.trim();
       var sub = document.getElementById("prodSub").value.trim();
       var price = Number(document.getElementById("prodPrice").value);
@@ -746,6 +819,8 @@
       var story = document.getElementById("prodStory").value.trim();
       var featured = document.getElementById("prodFeatured").checked;
       var imgSet = document.getElementById("prodImageSelect").value;
+      var prebookRelease = document.getElementById("prodPrebookRelease") ? document.getElementById("prodPrebookRelease").value.trim() : "";
+      var prebookNote = document.getElementById("prodPrebookNote") ? document.getElementById("prodPrebookNote").value.trim() : "";
 
       var img = {};
       if(newProdUploadedPhotos.length > 0){
@@ -767,31 +842,38 @@
       btn.disabled = true;
       btn.textContent = "Saving...";
 
-      api("/api/admin/products", {
-        method: "POST",
-        body: {
-          name: name,
-          sub: sub,
-          price: price,
-          landscape: landscape,
-          type: type,
-          status: status,
-          size: size,
-          burn: burn,
-          story: story,
-          featured: featured,
-          img: img
-        }
+      var payload = {
+        name: name,
+        sub: sub,
+        price: price,
+        landscape: landscape,
+        type: type,
+        status: status,
+        size: size,
+        burn: burn,
+        story: story,
+        featured: featured,
+        img: img,
+        prebookRelease: prebookRelease,
+        prebookNote: prebookNote
+      };
+
+      var url = (mode === "edit" && editId) ? ("/api/admin/products/" + encodeURIComponent(editId)) : "/api/admin/products";
+      var method = (mode === "edit" && editId) ? "PUT" : "POST";
+
+      api(url, {
+        method: method,
+        body: payload
       })
       .then(function(res){
         closeModal("modalProduct");
-        showToast("Product \"" + name + "\" added to catalogue");
+        showToast(mode === "edit" ? ("Product \"" + name + "\" updated") : ("Product \"" + name + "\" added to catalogue"));
         newProdUploadedPhotos = [];
         renderNewProdPhotoPreviews();
         loadProducts();
       })
       .catch(function(err){
-        alert("Failed to create product: " + err.message);
+        alert("Failed to save product: " + err.message);
       })
       .finally(function(){
         btn.disabled = false;
@@ -978,15 +1060,16 @@
     }
 
     tbody.innerHTML = orders.map(function(o){
+      var isPrebookOrd = o.hasPrebooking || (o.items && o.items.some(function(i){ return i.isPrebooking; }));
       var itemsSummary = o.items.map(function(i){
-        return esc(i.name) + ' (x' + i.qty + ')';
+        return esc(i.name) + ' (x' + i.qty + ')' + (i.isPrebooking ? ' <span style="color:#243B55;font-weight:600">[Pre-book]</span>' : '');
       }).join(', ');
 
       var addr = o.contact ? (esc(o.contact.address) + ', ' + esc(o.contact.city) + ' ' + esc(o.contact.pincode)) : '—';
       var phone = (o.contact && o.contact.phone) ? esc(o.contact.phone) : '';
 
       return '<tr data-order-id="'+esc(o.id)+'">' +
-        '<td><strong style="font-family:monospace">'+esc(o.id)+'</strong></td>' +
+        '<td><strong style="font-family:monospace">'+esc(o.id)+'</strong>' + (isPrebookOrd ? '<br><span class="status-pill prebooking" style="font-size:.66rem;margin-top:.25rem;display:inline-block">&#9679; Pre-booking</span>' : '') + '</td>' +
         '<td class="small">'+new Date(o.createdAt).toLocaleString()+'</td>' +
         '<td><strong>'+esc(o.contact.name)+'</strong><br><span class="small">'+esc(o.contact.email)+(phone ? ' · ' + phone : '')+'</span></td>' +
         '<td class="small" style="max-width:220px;line-height:1.4">'+addr+'</td>' +
@@ -995,6 +1078,7 @@
         '<td><strong style="font-size:1rem">'+fmt(o.total)+'</strong><br><span class="small" style="color:var(--mineral)">Subtotal: '+fmt(o.subtotal)+'</span></td>' +
         '<td>' +
           '<select class="order-status-select" data-id="'+esc(o.id)+'" style="font-size:.82rem;padding:.3rem .5rem;background:#fff;border:1px solid var(--line)">' +
+            '<option value="Reserved"'+(o.status==='Reserved'?' selected':'')+'>Reserved (Pre-booking)</option>' +
             '<option value="Confirmed"'+(o.status==='Confirmed'?' selected':'')+'>Confirmed</option>' +
             '<option value="Dispatched"'+(o.status==='Dispatched'?' selected':'')+'>Dispatched</option>' +
             '<option value="Delivered"'+(o.status==='Delivered'?' selected':'')+'>Delivered</option>' +

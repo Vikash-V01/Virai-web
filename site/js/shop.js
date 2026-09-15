@@ -5,14 +5,16 @@
   var countLabel = document.getElementById("countLabel");
   var clearBtn = document.getElementById("clearBtn");
   var landChips = document.getElementById("landChips");
+  var availSel = document.getElementById("availSel");
   var famSel = document.getElementById("famSel");
   var typeSel = document.getElementById("typeSel");
 
-  var state = { collection:"", family:"", type:"" };
+  var state = { collection:"", availability:"", family:"", type:"" };
 
   function readURL(){
     var p = new URLSearchParams(location.search);
     state.collection = p.get("collection") || "";
+    state.availability = p.get("availability") || "";
     state.family = (p.get("family") || "").toLowerCase();
     state.type = p.get("type") || "";
   }
@@ -20,6 +22,7 @@
   function writeURL(){
     var p = new URLSearchParams();
     if(state.collection) p.set("collection", state.collection);
+    if(state.availability) p.set("availability", state.availability);
     if(state.family) p.set("family", state.family);
     if(state.type) p.set("type", state.type);
     var qs = p.toString();
@@ -51,6 +54,13 @@
       state.collection = b.dataset.land;
       writeURL(); apply(); viraiTrack("fragrance_filter", { dimension:"collection", value:state.collection });
     });
+    if(availSel){
+      availSel.addEventListener("change", function(){
+        state.availability = availSel.value;
+        writeURL(); apply();
+        if(state.availability) viraiTrack("fragrance_filter", { dimension:"availability", value:state.availability });
+      });
+    }
     famSel.addEventListener("change", function(){
       state.family = famSel.value;
       writeURL(); apply();
@@ -62,7 +72,7 @@
       if(state.type) viraiTrack("fragrance_filter", { dimension:"format", value:state.type });
     });
     clearBtn.addEventListener("click", function(){
-      state = { collection:"", family:"", type:"" };
+      state = { collection:"", availability:"", family:"", type:"" };
       writeURL(); apply();
     });
   }
@@ -70,6 +80,8 @@
   function apply(){
     var list = VIRAI.products.filter(function(p){
       if(state.collection && p.landscape !== state.collection) return false;
+      if(state.availability === "prebooking" && p.status !== "prebooking") return false;
+      if(state.availability === "available" && (p.status === "prebooking" || p.status === "out_of_stock" || p.status === "sold_out")) return false;
       if(state.family && p.family.indexOf(state.family) === -1) return false;
       if(state.type && p.type !== state.type) return false;
       return true;
@@ -78,12 +90,16 @@
     Array.prototype.forEach.call(landChips.children, function(c){
       c.classList.toggle("on", c.dataset.land === state.collection);
     });
+    if(availSel){
+      availSel.value = state.availability;
+      availSel.dispatchEvent(new CustomEvent("vr-sync"));
+    }
     famSel.value = state.family;
     typeSel.value = state.type;
     famSel.dispatchEvent(new CustomEvent("vr-sync"));
     typeSel.dispatchEvent(new CustomEvent("vr-sync"));
 
-    var active = !!(state.collection || state.family || state.type);
+    var active = !!(state.collection || state.availability || state.family || state.type);
     clearBtn.hidden = !active;
 
     countLabel.textContent = list.length + (list.length === 1 ? " object" : " objects");

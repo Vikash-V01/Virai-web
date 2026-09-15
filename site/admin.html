@@ -476,9 +476,24 @@
           <label for="prodStock">Stock Status</label>
           <select id="prodStock">
             <option value="in_stock">In Stock</option>
+            <option value="prebooking">Pre-booking (New Release / Batch)</option>
             <option value="low_stock">Low Stock</option>
             <option value="out_of_stock">Out of Stock</option>
           </select>
+        </div>
+      </div>
+
+      <div id="prebookFieldsGroup" style="display:none;background:#F2F6FA;border:1px solid #D0DFEE;padding:1rem;border-radius:3px;margin-bottom:1.2rem">
+        <h4 style="font-size:.88rem;font-weight:600;color:#243B55;margin:0 0 .5rem">Pre-booking Allocation &amp; Release Window</h4>
+        <div class="form-grid-2">
+          <div class="admin-input-group" style="margin-bottom:0">
+            <label for="prodPrebookRelease">Target Release / Dispatch Date</label>
+            <input type="text" id="prodPrebookRelease" placeholder="e.g. Dispatches from 28 September 2026">
+          </div>
+          <div class="admin-input-group" style="margin-bottom:0">
+            <label for="prodPrebookNote">Batch / Atelier Allocation Note</label>
+            <input type="text" id="prodPrebookNote" placeholder="e.g. Slow-pour Batch 02 · Limited allocation of 120 numbered vessels">
+          </div>
         </div>
       </div>
 

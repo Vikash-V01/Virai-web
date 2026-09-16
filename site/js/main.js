@@ -812,6 +812,17 @@
         activeStep = 1;
       }
 
+      var stateLabel = document.getElementById("candleStateLabel");
+      if(stateLabel){
+        if(activeStep === 3){
+          stateLabel.textContent = "Part 03 · Made to linger";
+        } else if(activeStep === 2){
+          stateLabel.textContent = "Part 02 · Rooted in intention";
+        } else {
+          stateLabel.textContent = "Part 01 · Where memory begins";
+        }
+      }
+
       steps.forEach(function(stepEl){
         var s = parseInt(stepEl.getAttribute("data-step"), 10);
         if(s === activeStep){

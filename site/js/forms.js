@@ -10,7 +10,7 @@
     var title = kind === "corporate" ? "Enquiry received." : kind === "wedding" ? "Enquiry received." : "Message received.";
     return '<div class="form-success">' +
       '<h3>'+title+'</h3>' +
-      '<p style="color:var(--ink-soft);max-width:44ch;margin-inline:auto">Thank you. Our gifting team responds within two business days. In this prototype, nothing has been transmitted — connect this form to your CRM or email service before launch.</p>' +
+      '<p style="color:var(--ink-soft);max-width:44ch;margin-inline:auto">Thank you. Our gifting team responds within two business days. In this prototype, nothing has been transmitted - connect this form to your CRM or email service before launch.</p>' +
       '</div>';
   }
 

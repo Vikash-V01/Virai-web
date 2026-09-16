@@ -465,7 +465,7 @@ const DEMO_SAMPLE_ORDER = {
       price: 2850,
       qty: 1,
       giftWrap: true,
-      message: 'For your new beginning — may it linger unhurriedly.'
+      message: 'For your new beginning - may it linger unhurriedly.'
     }
   ]
 };

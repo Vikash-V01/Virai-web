@@ -9,8 +9,9 @@ RUN npm install --omit=dev
 # Copy application source code
 COPY . .
 
-# Cloud Run injects PORT environment variable (defaults to 8080 or 3000)
-ENV PORT=3000
+# Cloud Run default port is 8080; AI Studio proxy uses 3000
+ENV PORT=8080
+EXPOSE 8080
 EXPOSE 3000
 
 CMD ["npm", "start"]

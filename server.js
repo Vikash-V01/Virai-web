@@ -55,6 +55,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Production health-check endpoints for Google Cloud Run / container probes
+app.get(['/health', '/healthz', '/api/health'], (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: Math.floor(process.uptime()), timestamp: new Date().toISOString() });
+});
+
 // Helper to sanitize HTML strings
 function escapeHtml(str) {
   if (!str) return '';
@@ -1740,6 +1745,19 @@ app.use((err, req, res, next) => {
   res.status(500).sendFile(path.join(siteDir, '500.html'));
 });
 
-app.listen(PORT, HOST, () => {
+const primaryServer = app.listen(PORT, HOST, () => {
   console.log(`VIRAI server running securely at http://${HOST}:${PORT}`);
 });
+
+// Cloud Run compatibility: if deployed in a container where Cloud Run expects PORT (e.g. 8080),
+// also bind to that port so Cloud Run health check and traffic routing succeed seamlessly.
+const envPort = process.env.PORT ? parseInt(process.env.PORT, 10) : null;
+if (envPort && envPort !== PORT && !isNaN(envPort)) {
+  try {
+    app.listen(envPort, HOST, () => {
+      console.log(`VIRAI server also listening on port ${envPort} for Cloud Run container compatibility`);
+    });
+  } catch (err) {
+    console.warn(`[Port] Could not bind additional port ${envPort}:`, err.message);
+  }
+}

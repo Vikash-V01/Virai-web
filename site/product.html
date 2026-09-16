@@ -101,7 +101,11 @@
             <input id="qtyInput" value="1" inputmode="numeric" aria-label="Quantity">
             <button id="qPlus" aria-label="Increase quantity">+</button>
           </span>
-          <button class="btn btn-solid" id="atbBtn"><span id="atbActionText">Add to Bag</span> &ndash; <span id="atbPrice"></span></button>
+          <button class="btn btn-solid" id="atbBtn"><span id="atbActionText">Make It Yours</span></button>
+        </div>
+        <div class="pdp-error" id="pdpError" role="alert" hidden>
+          <p class="pdp-error-line">Something interrupted the moment.</p>
+          <button type="button" class="pdp-confirm-btn" id="pdpRetryBtn">TRY AGAIN &rarr;</button>
         </div>
         <div class="gift-module">
           <label class="check-row">
@@ -156,7 +160,7 @@
     <div class="sb-name" id="sbName"></div>
     <div class="small" id="sbPrice"></div>
   </div>
-  <button class="btn btn-solid" id="sbAtb">Add to Bag</button>
+  <button class="btn btn-solid" id="sbAtb">Make It Yours</button>
 </div>
 
 <footer class="site-foot" data-modular-footer id="site-footer"></footer>

@@ -136,8 +136,8 @@
       }
     } else {
       if(prebookBanner) prebookBanner.style.display = "none";
-      if(atbActionText) atbActionText.textContent = "Add to Bag";
-      if(sbAtb) sbAtb.textContent = "Add to Bag";
+      if(atbActionText) atbActionText.textContent = "Make It Yours";
+      if(sbAtb) sbAtb.textContent = "Make It Yours";
       if(atbBtn){ atbBtn.disabled = false; atbBtn.style.opacity = ""; atbBtn.style.cursor = ""; }
     }
 
@@ -182,12 +182,91 @@
   }
   function unitPrice(){ return p.price + (wrapChk.checked ? 150 : 0); }
   function updateAtb(){
-    document.getElementById("atbPrice").textContent = window.viraiFmt(unitPrice() * options().qty);
+    var priceEl = document.getElementById("pdpPrice");
+    if(priceEl){
+      priceEl.textContent = window.viraiFmt(unitPrice() * options().qty) + " \u00B7 " + p.size;
+    }
   }
   updateAtb();
 
-  document.getElementById("atbBtn").addEventListener("click", function(){ window.viraiAddToBag(p.id, options()); });
-  document.getElementById("sbAtb").addEventListener("click", function(){ window.viraiAddToBag(p.id, options()); });
+  function handlePdpPurchase(){
+    var opts = options();
+    var res = window.viraiAddToBag(p.id, opts);
+    var atbBtn = document.getElementById("atbBtn");
+    var atbText = document.getElementById("atbActionText");
+    var sbAtb = document.getElementById("sbAtb");
+    var errorEl = document.getElementById("pdpError");
+
+    if(res && res.success){
+      if(errorEl) errorEl.hidden = true;
+      if(atbText) atbText.innerHTML = "&#10003; In Your Bag";
+      if(atbBtn){
+        atbBtn.classList.add("is-in-bag");
+        atbBtn.setAttribute("aria-label", p.name + " is now in your bag");
+      }
+      if(sbAtb){
+        sbAtb.classList.add("is-in-bag");
+        sbAtb.innerHTML = "&#10003; In Your Bag";
+      }
+
+      // Quietly reset button labels after 3.5 seconds
+      setTimeout(function(){
+        if(atbText) atbText.textContent = "Make It Yours";
+        if(atbBtn){
+          atbBtn.classList.remove("is-in-bag");
+          atbBtn.setAttribute("aria-label", "Make " + p.name + " yours");
+        }
+        if(sbAtb){
+          sbAtb.classList.remove("is-in-bag");
+          sbAtb.textContent = "Make It Yours";
+        }
+      }, 3500);
+
+      // Trigger the 3.5s bottom-right corner popup
+      if(typeof window.viraiShowBagPopup === "function"){
+        window.viraiShowBagPopup(p.name, p.id);
+      }
+    } else {
+      if(errorEl) errorEl.hidden = false;
+    }
+  }
+
+  document.getElementById("atbBtn").addEventListener("click", handlePdpPurchase);
+  document.getElementById("sbAtb").addEventListener("click", handlePdpPurchase);
+
+  var viewBagBtn = document.getElementById("pdpViewBagBtn");
+  if(viewBagBtn){
+    viewBagBtn.addEventListener("click", function(){
+      viraiTrack("view_bag_clicked", { source: "pdp", product_id: p.id });
+      if(typeof window.viraiOpenBag === "function") window.viraiOpenBag(viewBagBtn);
+    });
+  }
+
+  var keepExploringBtn = document.getElementById("pdpKeepExploringBtn");
+  if(keepExploringBtn){
+    keepExploringBtn.addEventListener("click", function(){
+      viraiTrack("keep_exploring_clicked", { source: "pdp", product_id: p.id });
+      var confirmEl = document.getElementById("pdpConfirm");
+      if(confirmEl) confirmEl.hidden = true;
+      var atbText = document.getElementById("atbActionText");
+      if(atbText) atbText.textContent = "Make It Yours";
+      var atbBtn = document.getElementById("atbBtn");
+      if(atbBtn){
+        atbBtn.classList.remove("is-in-bag");
+        atbBtn.setAttribute("aria-label", "Make " + p.name + " yours");
+      }
+      var sbAtb = document.getElementById("sbAtb");
+      if(sbAtb){
+        sbAtb.classList.remove("is-in-bag");
+        sbAtb.textContent = "Make It Yours";
+      }
+    });
+  }
+
+  var retryBtn = document.getElementById("pdpRetryBtn");
+  if(retryBtn){
+    retryBtn.addEventListener("click", handlePdpPurchase);
+  }
 
   document.getElementById("sbName").textContent = p.name;
   document.getElementById("sbPrice").textContent = window.viraiFmt(p.price);

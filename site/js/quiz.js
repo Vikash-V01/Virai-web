@@ -618,7 +618,6 @@
       ("₹" + new Intl.NumberFormat("en-IN").format(product.price));
 
     var isPrebook = product.status === "prebooking";
-    var actionLabel = isPrebook ? "Pre-book · " + fmtPrice : "Add to Bag · " + fmtPrice;
 
     // Notes Breakdown from product data
     var notesHtml = "";
@@ -663,7 +662,7 @@
 
         '<footer class="quiz-result-footer">' +
           '<div class="quiz-result-actions">' +
-            '<button type="button" class="btn btn-solid" id="quizAddToBagBtn">' + actionLabel + '</button>' +
+            '<button type="button" class="btn btn-solid" id="quizAddToBagBtn">MAKE IT YOURS</button>' +
             '<a href="' + product.productUrl + '" class="btn btn-line" id="quizViewProdBtn">View Fragrance</a>' +
           '</div>' +
           '<div class="quiz-explore-alt">' +
@@ -681,10 +680,47 @@
     if (addToBagBtn) {
       addToBagBtn.addEventListener("click", function(){
         Analytics.addToCartClicked(product.id);
-        if (typeof window.viraiAddToBag === "function") {
-          window.viraiAddToBag(product.id);
-        } else {
-          window.location.href = product.productUrl;
+        var res = (typeof window.viraiAddToBag === "function") ?
+          window.viraiAddToBag(product.id, { qty: 1 }) :
+          { success: true };
+
+        if (typeof window.viraiShowBagPopup === "function") {
+          window.viraiShowBagPopup(product.name, product.id);
+        }
+
+        var actionsArea = document.querySelector(".quiz-result-actions");
+        if (actionsArea && res && res.success) {
+          actionsArea.innerHTML = '' +
+            '<div class="quiz-confirmed-area" role="status" aria-live="polite">' +
+              '<div class="quiz-confirmed-badge">&#10003; IN YOUR BAG</div>' +
+              '<p class="quiz-confirmed-lead">A fragrance chosen for you.</p>' +
+              '<h3 class="quiz-confirmed-name">' + product.name.toUpperCase() + '</h3>' +
+              '<p class="quiz-confirmed-title">' + product.title + '</p>' +
+              '<p class="quiz-confirmed-now">Now, it’s yours.</p>' +
+              '<div class="quiz-confirmed-buttons">' +
+                '<button type="button" class="btn btn-solid" id="quizViewBagBtn">VIEW BAG &rarr;</button>' +
+                '<button type="button" class="btn btn-line" id="quizKeepExploringBtn">KEEP EXPLORING &rarr;</button>' +
+              '</div>' +
+            '</div>';
+
+          var viewBag = document.getElementById("quizViewBagBtn");
+          if (viewBag) {
+            viewBag.addEventListener("click", function(){
+              Analytics.track("view_bag_clicked", { source: "quiz", product_id: product.id });
+              if (typeof window.viraiOpenBag === "function") window.viraiOpenBag(viewBag);
+            });
+          }
+
+          var keepExp = document.getElementById("quizKeepExploringBtn");
+          if (keepExp) {
+            keepExp.addEventListener("click", function(){
+              Analytics.track("keep_exploring_clicked", { source: "quiz", product_id: product.id });
+              var altSection = document.querySelector(".quiz-explore-alt");
+              if (altSection) {
+                altSection.scrollIntoView({ behavior: "smooth" });
+              }
+            });
+          }
         }
       });
     }

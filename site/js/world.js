@@ -40,7 +40,7 @@
         '<div class="chip-row">' +
           '<span class="price">' + window.viraiFmt(p.price) + '</span>' +
           '<span class="chip-actions">' +
-            '<button class="pcard-add" data-add="' + p.id + '">Add to Bag</button>' +
+            '<button class="pcard-add" data-add="' + p.id + '">Make It Yours</button>' +
             '<a class="chip-view" href="product.html?id=' + p.id + '">View</a>' +
           '</span>' +
         '</div>' +
@@ -251,7 +251,7 @@
             '<p class="qr-why">' + why + '</p>' +
             '<div class="qr-actions">' +
               '<a class="btn btn-solid" href="product.html?id=' + p.id + '">Explore Product</a>' +
-              '<button class="btn btn-line" type="button" data-add="' + p.id + '">Add to Bag</button>' +
+              '<button class="btn btn-line" type="button" data-add="' + p.id + '">Make It Yours</button>' +
             '</div>' +
             '<button class="q-again" type="button" data-again>Start again</button>' +
           '</div>' +

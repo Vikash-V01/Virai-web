@@ -138,33 +138,37 @@
   }
   function addToBag(id, opts){
     opts = opts || {};
-    var p = VIRAI.productById(id);
-    if(!p) return;
-    var c = cart();
-    var giftWrap = !!opts.giftWrap;
-    var message = (opts.message || "").slice(0, 180);
-    var qty = Math.max(1, parseInt(opts.qty, 10) || 1);
+    try {
+      var p = VIRAI.productById(id);
+      if(!p) return { success: false, error: "Product not found" };
+      var c = cart();
+      var giftWrap = !!opts.giftWrap;
+      var message = (opts.message || "").slice(0, 180);
+      var qty = Math.max(1, parseInt(opts.qty, 10) || 1);
 
-    var existing = null;
-    c.items.forEach(function(i){
-      if(i.id === id && !!i.giftWrap === giftWrap && (i.message || "") === message){
-        existing = i;
+      var existing = null;
+      c.items.forEach(function(i){
+        if(i.id === id && !!i.giftWrap === giftWrap && (i.message || "") === message){
+          existing = i;
+        }
+      });
+
+      if(existing){
+        existing.qty += qty;
+      } else {
+        c.items.push({ id: id, qty: qty, giftWrap: giftWrap, message: message });
       }
-    });
-
-    if(existing){
-      existing.qty += qty;
-    } else {
-      c.items.push({ id: id, qty: qty, giftWrap: giftWrap, message: message });
+      store(CART_KEY, c);
+      updateBadge(true);
+      renderDrawer();
+      track("product_make_it_yours_clicked", { product_id: id, price: p.price, qty: qty });
+      track("product_added_to_bag", { product_id: id, price: p.price, gift_wrap: giftWrap, qty: qty });
+      track("add_to_bag", { product_id: id, price: p.price, gift_wrap: giftWrap, qty: qty });
+      return { success: true, product: p, count: cartCount(c), qty: qty };
+    } catch(err) {
+      console.error("Failed to add to bag:", err);
+      return { success: false, error: err };
     }
-    saveCart(c);
-    track("add_to_bag", { product_id: id, price: p.price, gift_wrap: giftWrap, qty: qty });
-    if(p.status === "prebooking"){
-      toast("Pre-booked: " + p.name.split("\u00B7")[0].trim() + " reserved in your bag");
-    } else {
-      toast(p.name.split("\u00B7")[0].trim() + " added to bag");
-    }
-    openDrawer();
   }
   window.viraiAddToBag = addToBag;
 
@@ -210,9 +214,7 @@
 
     var actionBtn = isSoldOut
       ? '<button class="pcard-add" disabled style="opacity:.5;cursor:not-allowed">Sold Out</button>'
-      : (isPrebook
-          ? '<button class="pcard-add pcard-prebook" data-add="'+p.id+'" title="Pre-book this limited studio release">Pre-book</button>'
-          : '<button class="pcard-add" data-add="'+p.id+'">Add to Bag</button>');
+      : '<button class="pcard-add" data-add="'+p.id+'" aria-label="Make '+p.name+' yours">Make It Yours</button>';
 
     return '' +
     '<article class="pcard' + (isPrebook ? ' pcard-is-prebook' : '') + '">' +
@@ -235,8 +237,20 @@
   window.viraiCard = cardHTML;
 
   var badgeEl = null;
-  function updateBadge(){
-    $all(".bag-count").forEach(function(el){ el.textContent = cartCount(); });
+  function updateBadge(animate){
+    var count = cartCount();
+    var els = $all(".bag-count");
+    if(animate){
+      els.forEach(function(el){ el.classList.add("vr-count-fade"); });
+      setTimeout(function(){
+        els.forEach(function(el){
+          el.textContent = count;
+          el.classList.remove("vr-count-fade");
+        });
+      }, 120);
+    } else {
+      els.forEach(function(el){ el.textContent = count; });
+    }
   }
 
   var drawer, overlay;
@@ -546,22 +560,97 @@
       });
     });
 
-    document.addEventListener("click", function(e){
-      var add = e.target.closest("[data-add]");
-      if(add){
-        e.preventDefault();
-        if(MOTION){
-          add.classList.remove("vr-press"); void add.offsetWidth; add.classList.add("vr-press");
-          var card = add.closest(".pcard");
-          var srcImg = card ? $(".pcard-media img", card) : null;
-          if(srcImg) flyToBag(srcImg);
-        }
-        addToBag(add.dataset.add, {});
-        return;
+  var bagPopupTimer = null;
+  function showBagPopup(productName, productId){
+    var toast = document.getElementById("viraiBagToast");
+    if(!toast){
+      toast = document.createElement("div");
+      toast.id = "viraiBagToast";
+      toast.className = "virai-bag-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      toast.innerHTML = '' +
+        '<span class="vbt-check">&#10003;</span>' +
+        '<div class="vbt-body">' +
+          '<p class="vbt-text"><strong class="vbt-prod-name"></strong> IS NOW IN YOUR BAG.</p>' +
+          '<button type="button" class="vbt-view" data-open-bag data-source="toast">VIEW BAG &rarr;</button>' +
+        '</div>' +
+        '<button type="button" class="vbt-close" aria-label="Close notification">&times;</button>';
+      document.body.appendChild(toast);
+
+      var closeBtn = toast.querySelector(".vbt-close");
+      if(closeBtn){
+        closeBtn.addEventListener("click", function(e){
+          e.stopPropagation();
+          hideBagPopup();
+        });
       }
-      var bagBtn = e.target.closest("[data-open-bag]");
-      if(bagBtn){ e.preventDefault(); openDrawer(bagBtn); }
-    });
+    }
+
+    var shortName = (productName.split("\u00B7")[0] || productName).trim().toUpperCase();
+    var nameEl = toast.querySelector(".vbt-prod-name");
+    if(nameEl) nameEl.textContent = shortName;
+
+    var viewBtn = toast.querySelector(".vbt-view");
+    if(viewBtn && productId){
+      viewBtn.setAttribute("data-product-id", productId);
+    }
+
+    clearTimeout(bagPopupTimer);
+    toast.classList.add("is-visible");
+
+    // Automatically disappears after 3.5 seconds
+    bagPopupTimer = setTimeout(function(){
+      hideBagPopup();
+    }, 3500);
+  }
+
+  function hideBagPopup(){
+    var toast = document.getElementById("viraiBagToast");
+    if(toast){
+      toast.classList.remove("is-visible");
+    }
+    clearTimeout(bagPopupTimer);
+  }
+
+  window.viraiShowBagPopup = showBagPopup;
+  window.viraiHideBagPopup = hideBagPopup;
+
+  document.addEventListener("click", function(e){
+    var add = e.target.closest("[data-add]");
+    if(add){
+      e.preventDefault();
+      var id = add.dataset.add;
+      var p = VIRAI.productById(id);
+      var res = addToBag(id, {});
+      if(res && res.success && p){
+        // Tactile button feedback
+        add.classList.add("is-in-bag");
+        add.innerHTML = "&#10003; In Your Bag";
+        add.setAttribute("aria-label", p.name + " is now in your bag");
+
+        // Quietly reset button after 3.5 seconds
+        setTimeout(function(){
+          add.classList.remove("is-in-bag");
+          add.textContent = "Make It Yours";
+          add.setAttribute("aria-label", "Make " + p.name + " yours");
+        }, 3500);
+
+        // Right-bottom corner popup for 3.5 seconds
+        showBagPopup(p.name, p.id);
+      }
+      return;
+    }
+    var bagBtn = e.target.closest("[data-open-bag]");
+    if(bagBtn){
+      e.preventDefault();
+      hideBagPopup();
+      var src = bagBtn.dataset.source || "ui";
+      var prodId = bagBtn.dataset.productId || "";
+      track("view_bag_clicked", { source: src, product_id: prodId });
+      openDrawer(bagBtn);
+    }
+  });
 
     // Smooth scroll navigation to Gifting / Quote section
     function scrollToGifting(immediate){
